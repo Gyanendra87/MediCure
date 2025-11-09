@@ -1,0 +1,257 @@
+Q: What are the symptoms of diabetes?
+A: Increased thirst, frequent urination, extreme hunger, unexplained weight loss, fatigue, and blurred vision.
+
+Q: What are the types of diabetes?
+A: There are two main types — Type 1 diabetes, where the body does not produce insulin, and Type 2 diabetes, where the body does not use insulin properly.
+
+Q: What foods should a diabetic avoid?
+A: Avoid sugary drinks, white bread, pasta, fried foods, and high-carb snacks.
+
+Q: What is hypertension?
+A: Hypertension is another term for high blood pressure, a condition where blood pressure in the arteries is consistently elevated.
+
+Q: How can I prevent high blood pressure?
+A: Reduce salt intake, eat more fruits and vegetables, exercise daily, manage stress, and avoid smoking and alcohol.
+
+Q: What are common heart diseases?
+A: Coronary artery disease, heart attack, heart failure, and arrhythmia.
+
+Q: What are the symptoms of a heart attack?
+A: Chest pain, shortness of breath, sweating, nausea, and discomfort in arms, neck, or jaw.
+
+Q: How can I keep my heart healthy?
+A: Eat a balanced diet, maintain a healthy weight, exercise regularly, and avoid smoking.
+
+Q: What are the symptoms of anemia?
+A: Fatigue, pale skin, dizziness, shortness of breath, and cold hands and feet.
+
+Q: What foods help in anemia?
+A: Foods rich in iron like spinach, red meat, lentils, and vitamin C-rich fruits.
+
+Q: What causes dehydration?
+A: Lack of fluid intake, excessive sweating, vomiting, or diarrhea.
+
+Q: What are the signs of dehydration?
+A: Thirst, dark urine, dry mouth, dizziness, and fatigue.
+
+Q: What are the symptoms of COVID-19?
+A: Fever, cough, fatigue, sore throat, and loss of taste or smell.
+
+Q: How can I prevent COVID-19?
+A: Wear masks, wash hands frequently, and maintain physical distance.
+
+Q: What are the symptoms of flu?
+A: Fever, cough, sore throat, muscle pain, and fatigue.
+
+Q: How can I treat flu at home?
+A: Rest, stay hydrated, and take paracetamol or ibuprofen for fever and pain.
+
+Q: What are the symptoms of a cold?
+A: Runny nose, sneezing, sore throat, and mild cough.
+
+Q: How can I relieve a sore throat?
+A: Gargle with warm salt water, drink warm tea with honey, and stay hydrated.
+
+Q: What are the symptoms of food poisoning?
+A: Vomiting, diarrhea, abdominal pain, and fever.
+
+Q: How can I treat food poisoning?
+A: Drink plenty of fluids, avoid solid food until symptoms improve, and rest.
+
+Q: What causes headaches?
+A: Dehydration, stress, poor posture, eye strain, or lack of sleep.
+
+Q: How to get rid of headaches?
+A: Stay hydrated, rest, massage your temples, and take pain relievers if needed.
+
+Q: What are migraine symptoms?
+A: Severe headache, nausea, sensitivity to light and sound.
+
+Q: How to prevent migraines?
+A: Avoid triggers like loud noise, caffeine, stress, and irregular sleep patterns.
+
+Q: What causes acne?
+A: Hormonal imbalance, oily skin, poor hygiene, or certain foods.
+
+Q: How can I treat acne naturally?
+A: Wash your face twice daily, avoid oily foods, and apply aloe vera or tea tree oil.
+
+Q: What are the causes of hair fall?
+A: Stress, poor diet, hormonal changes, or vitamin deficiency.
+
+Q: How can I prevent hair loss?
+A: Eat a protein-rich diet, massage scalp with oil, avoid stress, and stay hydrated.
+
+Q: What are the symptoms of fever?
+A: Elevated body temperature, sweating, chills, and fatigue.
+
+Q: What are the symptoms of pneumonia?
+A: Cough, chest pain, fever, shortness of breath, and fatigue.
+
+Q: What causes obesity?
+A: Consuming more calories than the body burns, sedentary lifestyle, and genetic factors.
+
+Q: How to lose weight safely?
+A: Eat a balanced diet, exercise daily, and avoid sugary foods and drinks.
+
+Q: What is depression?
+A: A mental health condition characterized by persistent sadness, loss of interest, and fatigue.
+
+Q: How to manage depression?
+A: Talk to a counselor, exercise regularly, get enough sleep, and spend time with loved ones.
+
+Q: What is anxiety?
+A: A feeling of worry, nervousness, or unease about uncertain outcomes.
+
+Q: How to reduce anxiety naturally?
+A: Practice deep breathing, meditation, yoga, and limit caffeine.
+
+Q: What are the symptoms of asthma?
+A: Shortness of breath, wheezing, chest tightness, and coughing.
+
+Q: How to manage asthma?
+A: Use prescribed inhalers, avoid smoke and allergens, and stay physically active.
+
+Q: What causes joint pain?
+A: Arthritis, injury, overuse, or lack of physical activity.
+
+Q: How can I relieve joint pain naturally?
+A: Apply hot or cold compress, exercise gently, and maintain a healthy weight.
+
+Q: What are home remedies for cough?
+A: Drink warm honey-lemon water, inhale steam, and avoid cold drinks.
+
+Q: What is a healthy blood pressure level?
+A: Around 120/80 mmHg is considered normal.
+
+Q: What are the symptoms of low blood pressure?
+A: Dizziness, fainting, blurred vision, and fatigue.
+
+Q: How to manage low blood pressure?
+A: Drink fluids, eat small frequent meals, and add a little salt to your diet.
+
+Q: What causes allergies?
+A: Overreaction of the immune system to substances like pollen, dust, or food.
+
+Q: How can I treat skin allergies?
+A: Avoid the allergen, apply soothing creams, and take antihistamines if needed.
+
+Q: What are the symptoms of dengue?
+A: High fever, joint pain, rashes, and fatigue.
+
+Q: How can I prevent dengue?
+A: Use mosquito repellents, wear long-sleeved clothing, and remove stagnant water.
+
+Q: What are the symptoms of malaria?
+A: Fever, chills, sweating, and headache.
+
+Q: What are the symptoms of thyroid disease?
+A: Fatigue, weight changes, mood swings, and irregular heartbeat.
+
+Q: How can I maintain thyroid health?
+A: Eat iodine-rich foods, manage stress, and get regular checkups.
+
+Q: What is cholesterol?
+A: A waxy substance in blood; excess can increase risk of heart disease.
+
+Q: How can I lower cholesterol naturally?
+A: Eat fiber-rich foods, avoid fried foods, and exercise regularly.
+
+Q: What are the signs of vitamin D deficiency?
+A: Fatigue, bone pain, muscle weakness, and mood changes.
+
+Q: What are the signs of vitamin B12 deficiency?
+A: Fatigue, pale skin, weakness, and tingling in hands and feet.
+
+Q: What are common digestive issues?
+A: Indigestion, constipation, acid reflux, and bloating.
+
+Q: How can I improve digestion?
+A: Eat slowly, drink enough water, and include fiber-rich foods.
+
+Q: What are the symptoms of kidney stones?
+A: Severe pain in lower back, blood in urine, nausea, and frequent urination.
+
+Q: How to prevent kidney stones?
+A: Drink lots of water, reduce salt, and limit animal protein.
+
+Q: What are symptoms of liver disease?
+A: Jaundice, fatigue, nausea, and abdominal pain.
+
+Q: How can I keep my liver healthy?
+A: Avoid alcohol, eat healthy, and exercise regularly.
+
+Q: What are the symptoms of tuberculosis (TB)?
+A: Persistent cough, weight loss, night sweats, and fever.
+
+Q: What are home remedies for stomach pain?
+A: Drink warm water, use a heating pad, and avoid spicy food.
+
+Q: What are home remedies for constipation?
+A: Drink more water, eat fiber-rich foods, and stay active.
+
+Q: What are the symptoms of urinary tract infection (UTI)?
+A: Burning during urination, frequent urge to urinate, and cloudy urine.
+
+Q: How can I prevent UTI?
+A: Drink water, maintain hygiene, and avoid holding urine.
+
+Q: What are common pregnancy symptoms?
+A: Missed period, nausea, fatigue, and breast tenderness.
+
+Q: What foods are good during pregnancy?
+A: Fruits, vegetables, whole grains, and foods rich in iron and folic acid.
+
+Q: What are the symptoms of menstrual cramps?
+A: Lower abdominal pain, fatigue, and mood swings.
+
+Q: How can I relieve menstrual cramps?
+A: Apply heat, stay active, and drink herbal teas.
+
+Q: What is osteoporosis?
+A: A bone disease where bones become weak and brittle.
+
+Q: How can I prevent osteoporosis?
+A: Eat calcium-rich foods and get enough vitamin D.
+
+Q: What causes insomnia?
+A: Stress, caffeine, irregular sleep schedule, or anxiety.
+
+Q: How to treat insomnia naturally?
+A: Maintain a bedtime routine, avoid screens before bed, and meditate.
+
+Q: What are the symptoms of stroke?
+A: Sudden numbness, trouble speaking, loss of balance, and confusion.
+
+Q: What is first aid for burns?
+A: Cool the area with water, cover with a clean cloth, and avoid applying butter.
+
+Q: What is first aid for bleeding?
+A: Apply pressure with a clean cloth to stop the bleeding.
+
+Q: What is first aid for a fracture?
+A: Immobilize the area and seek medical attention immediately.
+
+Q: What is obesity?
+A: A medical condition where excess body fat affects health.
+
+Q: What are the causes of obesity?
+A: Poor diet, inactivity, genetics, and hormonal imbalance.
+
+Q: What are common sleep disorders?
+A: Insomnia, sleep apnea, and restless leg syndrome.
+
+Q: What are the symptoms of sleep apnea?
+A: Loud snoring, pauses in breathing, and morning headaches.
+
+Q: What are signs of mental stress?
+A: Irritability, fatigue, lack of focus, and mood swings.
+
+Q: How to improve mental health?
+A: Exercise, socialize, meditate, and talk about your feelings.
+
+Q: What are home remedies for toothache?
+A: Rinse with salt water, use clove oil, and avoid very hot or cold foods.
+
+Q: What are signs of dehydration in children?
+A: Dry lips, sunken eyes, lethargy, and decreased urination.
