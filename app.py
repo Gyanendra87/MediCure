@@ -1,15 +1,15 @@
 import os
 import tempfile
-from fastapi import FastAPI, Query, UploadFile, File
+from fastapi import FastAPI, APIRouter, Query, UploadFile, File, Header, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from graph_builder import graph
+from graph_builder import graph, predict_remedy  # ✅ Now imports predict_remedy
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
+from auth import create_jwt_token, verify_jwt_token
 
 # ==========================
-# 🚀 FASTAPI SETUP
+# FastAPI Setup
 # ==========================
 app = FastAPI(title="LangGraph Medical Chatbot")
 
@@ -21,76 +21,107 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ==========================
-# GLOBAL VARIABLE TO STORE LAST UPLOADED REPORT CONTENT
-# ==========================
+# Global variable for last uploaded report
 report_context = ""
 
-# ==========================
-# 🩺 BASIC ROUTE
-# ==========================
-@app.get("/")
-def root():
-    return {"message": "✅ LangGraph Medical Chatbot is running!"}
-
+# Routers
+chat_router = APIRouter(prefix="/chat", tags=["Chat"])
+report_router = APIRouter(prefix="/report", tags=["Report"])
+auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 # ==========================
-# 💬 CHATBOT ROUTE (QA + Remedies)
+# Authentication Dependency
 # ==========================
-@app.get("/ask")
-async def ask_question(query: str = Query(...)):
+def get_current_user(authorization: str = Header(...)):
     """
-    Ask a medical question and get an answer from LangGraph + Gemini.
-    If a report was uploaded, include its content as context.
+    Verify JWT token in 'Authorization' header
     """
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid auth header format")
+    token = authorization.split(" ")[1]
     try:
+        payload = verify_jwt_token(token)
+        return payload["user_id"]
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+# ==========================
+# Hardcoded Users
+# ==========================
+USERS = {
+    "user12": "mypassword123",
+    "user1": "test123"
+}
+
+# ==========================
+# Auth Routes
+# ==========================
+@auth_router.post("/login")
+def login(user_id: str = Query(...), password: str = Query(...)):
+    """
+    Generate JWT token if user_id and password match.
+    """
+    if user_id not in USERS or USERS[user_id] != password:
+        raise HTTPException(status_code=401, detail="Invalid user ID or password")
+    token = create_jwt_token(user_id)
+    return {"token": token}
+
+# ==========================
+# Chatbot Route (QA + Home Remedies)
+# ==========================
+@chat_router.get("/ask")
+async def ask_question(query: str = Query(...), user_id: str = Depends(get_current_user)):
+    """
+    Ask a medical question. JWT required.
+    """
+    global report_context
+    try:
+        # ✅ Home Remedies detection
+        if "remedy" in query.lower() or "home remedy" in query.lower():
+            disease_name = query.split("for")[-1].strip() if "for" in query.lower() else query
+            remedy = predict_remedy(disease_name)
+            answer = f"🌿 Home Remedy for {disease_name}: {remedy}"
+            return {"user": user_id, "answer": answer}
+
+        # Default medical QA (uses medical_book.pdf)
         initial_state = {
             "messages": [{"role": "user", "content": query}],
-            "context": report_context  # Include uploaded report if any
+            "context": report_context
         }
         result = graph.invoke(initial_state)
         answer = result["messages"][-1]["content"]
-        return {"answer": answer}
+        return {"user": user_id, "answer": answer}
+
     except Exception as e:
         return {"error": str(e)}
 
-
 # ==========================
-# 📄 PDF REPORT SUMMARIZER
+# PDF Report Upload
 # ==========================
-@app.post("/upload-report/")
-async def upload_report(file: UploadFile = File(...)):
+@report_router.post("/upload")
+async def upload_report(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     """
-    Upload a PDF medical report and get a summarized analysis.
-    The content is also saved for follow-up questions.
+    Upload PDF medical report. JWT required.
     """
     global report_context
-
     try:
-        # Save PDF temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
             tmp_file.write(await file.read())
             tmp_path = tmp_file.name
 
-        # Load PDF
         loader = PyPDFLoader(tmp_path)
         documents = loader.load()
-
-        # Split into manageable chunks
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         chunks = splitter.split_documents(documents)
 
-        # Store report content for follow-up questions
         report_context = "\n".join([chunk.page_content for chunk in chunks])
 
-        # Initialize LLM for summarization
         llm = ChatGoogleGenerativeAI(
             model="models/gemini-2.5-flash",
             temperature=0.3,
             streaming=False
         )
 
-        # Summarize each chunk
         summaries = []
         for i, chunk in enumerate(chunks):
             prompt = (
@@ -100,28 +131,28 @@ async def upload_report(file: UploadFile = File(...)):
             response = llm.invoke(prompt)
             summaries.append(response.content)
 
-        # Combine all summaries into one concise final summary
         combined_prompt = (
             "Combine these partial medical report summaries into one clear and concise final summary:\n\n"
             + "\n\n".join(summaries)
         )
         final_response = llm.invoke(combined_prompt)
+        summary_text = final_response.content if hasattr(final_response, "content") else str(final_response)
 
-        # Extract the final summary text safely
-        summary_text = (
-            final_response.content
-            if hasattr(final_response, "content")
-            else str(final_response)
-        )
-
-        # Clean up temp file
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
-        return JSONResponse({"summary": summary_text})
+        return {"user": user_id, "summary": summary_text}
 
     except Exception as e:
-        # Safe cleanup even if error occurs
         if 'tmp_path' in locals() and os.path.exists(tmp_path):
             os.remove(tmp_path)
-        return JSONResponse({"error": str(e)})
+        return {"error": str(e)}
+
+# ==========================
+# Include Routers
+# ==========================
+app.include_router(auth_router)
+app.include_router(chat_router)
+app.include_router(report_router)
+
+print("✅ FastAPI Chatbot with JWT is ready!")

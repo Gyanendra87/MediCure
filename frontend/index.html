@@ -133,7 +133,7 @@
       </div>
     </div>
 
-    <!-- REMEDIES (Now primary home remedies interface) -->
+    <!-- REMEDIES -->
     <div id="remedies" class="tab-content">
       <h2>🌿 Home Remedy Finder</h2>
       
@@ -157,7 +157,7 @@
       </div>
     </div>
 
-    <!-- CHATBOT (General medical questions) -->
+    <!-- CHATBOT -->
     <div id="chatbot" class="tab-content">
       <h2>Medical AI Assistant</h2>
       
@@ -187,63 +187,63 @@
     const API_BASE = 'http://127.0.0.1:8000';
 
     /***********************
+     * Authentication Check
+     ***********************/
+    let token = localStorage.getItem('jwt_token');
+    if(!token){
+      window.location.href = 'login.html';
+    }
+
+    function getAuthHeaders(){
+      return { 'Authorization': `Bearer ${token}` };
+    }
+
+    /***********************
      * Utility & UI Helpers
      ***********************/
-    function showNotification(text, type = 'info') {
+    function showNotification(text,type='info'){
       const existing = document.querySelector('.notification');
-      if (existing) existing.remove();
+      if(existing) existing.remove();
       const div = document.createElement('div');
-      div.className = 'notification ' + (type === 'success' ? 'note-success' : type === 'error' ? 'note-error' : 'note-info');
+      div.className = 'notification ' + (type==='success'?'note-success':type==='error'?'note-error':'note-info');
       div.textContent = text;
       document.body.appendChild(div);
-      setTimeout(() => div.remove(), 3500);
+      setTimeout(()=>div.remove(),3500);
     }
 
-    function switchTab(ev, tabId) {
-      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-      if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    function switchTab(ev,tabId){
+      document.querySelectorAll('.tab-button').forEach(b=>b.classList.remove('active'));
+      if(ev && ev.currentTarget) ev.currentTarget.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
-      if (tabId === 'chatbot') setTimeout(() => document.getElementById('chatInput').focus(), 80);
-      if (tabId === 'remedies') setTimeout(() => document.getElementById('diseaseInput').focus(), 80);
+      if(tabId==='chatbot') setTimeout(()=>document.getElementById('chatInput').focus(),80);
+      if(tabId==='remedies') setTimeout(()=>document.getElementById('diseaseInput').focus(),80);
     }
 
-    function triggerFile() { document.getElementById('fileInput').click(); }
+    function triggerFile(){ document.getElementById('fileInput').click(); }
 
     /***********************
      * Drag & Drop for Upload
      ***********************/
     const uploadArea = document.getElementById('uploadArea');
-    ['dragenter','dragover','dragleave','drop'].forEach(ev => {
-      uploadArea.addEventListener(ev, e => {
-        e.preventDefault(); e.stopPropagation();
-      });
+    ['dragenter','dragover','dragleave','drop'].forEach(ev=>{
+      uploadArea.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();});
     });
-
-    ['dragenter','dragover'].forEach(ev => {
-      uploadArea.addEventListener(ev, () => uploadArea.classList.add('dragover'));
-    });
-    ['dragleave','drop'].forEach(ev => {
-      uploadArea.addEventListener(ev, () => uploadArea.classList.remove('dragover'));
-    });
-
-    uploadArea.addEventListener('drop', e => {
+    ['dragenter','dragover'].forEach(ev=>{uploadArea.addEventListener(ev,()=>uploadArea.classList.add('dragover'));});
+    ['dragleave','drop'].forEach(ev=>{uploadArea.addEventListener(ev,()=>uploadArea.classList.remove('dragover'));});
+    uploadArea.addEventListener('drop',e=>{
       const files = e.dataTransfer.files;
-      if (files.length) handleFile(files[0]);
+      if(files.length) handleFile(files[0]);
     });
 
     /***********************
-     * File Handling - API Connected
+     * File Handling
      ***********************/
-    function bytesToKB(n){ return (n/1024).toFixed(2) + ' KB'; }
+    function bytesToKB(n){ return (n/1024).toFixed(2)+' KB'; }
 
     async function handleFile(file){
       if(!file) return;
-      
-      if(!file.name.toLowerCase().endsWith('.pdf')) {
-        showNotification('❌ Please select a PDF file', 'error'); 
-        return;
-      }
+      if(!file.name.toLowerCase().endsWith('.pdf')) { showNotification('❌ Please select a PDF file','error'); return; }
 
       document.getElementById('fileInfo').style.display='block';
       document.getElementById('fileName').textContent = file.name;
@@ -252,38 +252,38 @@
       const reportTextEl = document.getElementById('reportText');
       document.getElementById('reportContent').style.display='block';
       reportTextEl.textContent = '⏳ Uploading and analyzing report...';
-      showNotification('⏳ Uploading report...', 'info');
+      showNotification('⏳ Uploading report...','info');
 
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file",file);
 
-      try {
-        const response = await fetch(`${API_BASE}/upload-report/`, { 
-          method: 'POST', 
-          body: formData 
+      try{
+        const response = await fetch(`${API_BASE}/report/upload`,{
+          method:'POST',
+          body:formData,
+          headers:getAuthHeaders()
         });
         const data = await response.json();
-        
-        if (data.summary) {
+        if(data.summary){
           reportTextEl.textContent = data.summary;
-          showNotification('✅ Report analyzed successfully! You can now ask questions about it in the Medical Chat tab.', 'success');
-        } else if (data.error) {
-          reportTextEl.textContent = "⚠ " + data.error;
-          showNotification('❌ Error analyzing report', 'error');
+          showNotification('✅ Report analyzed successfully!','success');
+        } else if(data.error){
+          reportTextEl.textContent = "⚠ "+data.error;
+          showNotification('❌ Error analyzing report','error');
         }
-      } catch (err) {
-        reportTextEl.textContent = "⚠ Server not responding! Make sure the backend is running on port 8000.";
-        showNotification('❌ Server not responding', 'error');
+      } catch(err){
+        reportTextEl.textContent = "⚠ Server not responding!";
+        showNotification('❌ Server not responding','error');
       }
     }
 
     /***********************
-     * Chatbot - API Connected (General Medical Questions)
+     * Chatbot
      ***********************/
-    function appendChatMessage(text, isUser=false){
+    function appendChatMessage(text,isUser=false){
       const chatMessages = document.getElementById('chatMessages');
       const div = document.createElement('div');
-      div.className = 'message ' + (isUser ? 'user' : 'bot');
+      div.className = 'message '+(isUser?'user':'bot');
       div.textContent = text;
       chatMessages.appendChild(div);
       chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -293,87 +293,76 @@
       const input = document.getElementById('chatInput');
       const text = input.value.trim();
       if(!text) return;
-      
-      appendChatMessage(text, true);
+
+      appendChatMessage(text,true);
       input.value = '';
-      
-      appendChatMessage('⏳ Thinking...', false);
-      
-      try {
-        const response = await fetch(`${API_BASE}/ask?query=${encodeURIComponent(text)}`);
+      appendChatMessage('⏳ Thinking...',false);
+
+      try{
+        const response = await fetch(`${API_BASE}/chat/ask?query=${encodeURIComponent(text)}`,{
+          headers:getAuthHeaders()
+        });
         const data = await response.json();
-        
         const messages = document.getElementById('chatMessages');
         messages.removeChild(messages.lastChild);
-        
-        if (data.answer) {
-          appendChatMessage(data.answer, false);
-        } else if (data.error) {
-          appendChatMessage("⚠ " + data.error, false);
-        }
-      } catch (err) {
+
+        if(data.answer) appendChatMessage(data.answer,false);
+        else if(data.error) appendChatMessage("⚠ "+data.error,false);
+      } catch(err){
         const messages = document.getElementById('chatMessages');
         messages.removeChild(messages.lastChild);
-        appendChatMessage("⚠ Server not responding! Make sure the backend is running on port 8000.", false);
+        appendChatMessage("⚠ Server not responding!",false);
       }
     }
 
-    function handleChatKeypress(e){
-      if(e.key === 'Enter' && !e.shiftKey){ 
-        e.preventDefault(); 
-        sendMessage(); 
-      }
-    }
+    function handleChatKeypress(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } }
 
     /***********************
-     * Home Remedies - CSV Based (Primary Feature)
+     * Home Remedies
      ***********************/
     async function getRemedies(){
       const disease = document.getElementById('diseaseInput').value.trim();
-      if(!disease) {
-        showNotification('⚠️ Please enter a disease or condition name', 'error'); 
-        return;
-      }
+      if(!disease){ showNotification('⚠️ Please enter a disease or condition name','error'); return; }
 
       const resDiv = document.getElementById('remedyResults');
       resDiv.innerHTML = '<p style="text-align:center">🔍 Searching our home remedies database...</p>';
-      resDiv.style.display = 'block';
+      resDiv.style.display='block';
 
-      try {
-        const response = await fetch(`${API_BASE}/ask?query=home remedies for ${encodeURIComponent(disease)}`);
+      try{
+        const response = await fetch(`${API_BASE}/chat/ask?query=home remedies for ${encodeURIComponent(disease)}`,{
+          headers:getAuthHeaders()
+        });
         const data = await response.json();
-        
-        if (data.answer) {
-          const formattedAnswer = data.answer.replace(/\n/g, '<br>');
-          resDiv.innerHTML = `
-            <h3>🌿 Home Remedies for "${disease}"</h3>
-            <div class="remedy-item">${formattedAnswer}</div>
-          `;
-          showNotification('✅ Remedies found!', 'success');
-        } else if (data.error) {
+        if(data.answer){
+          const formattedAnswer = data.answer.replace(/\n/g,'<br>');
+          resDiv.innerHTML = `<h3>🌿 Home Remedies for "${disease}"</h3><div class="remedy-item">${formattedAnswer}</div>`;
+          showNotification('✅ Remedies found!','success');
+        } else if(data.error){
           resDiv.innerHTML = `<p style="text-align:center">⚠ ${data.error}</p>`;
-          showNotification('❌ Error fetching remedies', 'error');
+          showNotification('❌ Error fetching remedies','error');
         }
-      } catch (err) {
-        resDiv.innerHTML = '<p style="text-align:center">⚠ Server not responding! Make sure the backend is running on port 8000.</p>';
-        showNotification('❌ Server not responding', 'error');
+      } catch(err){
+        resDiv.innerHTML = '<p style="text-align:center">⚠ Server not responding!</p>';
+        showNotification('❌ Server not responding','error');
       }
-
-      resDiv.scrollIntoView({behavior:'smooth', block:'nearest'});
+      resDiv.scrollIntoView({behavior:'smooth',block:'nearest'});
     }
 
-    function handleRemedyKeypress(e){
-      if(e.key === 'Enter'){ 
-        e.preventDefault(); 
-        getRemedies(); 
-      }
+    function handleRemedyKeypress(e){ if(e.key==='Enter'){ e.preventDefault(); getRemedies(); } }
+
+    /***********************
+     * Logout
+     ***********************/
+    function logout(){
+      localStorage.removeItem('jwt_token');
+      window.location.href='login.html';
     }
 
     /***********************
      * Startup
      ***********************/
-    window.addEventListener('load', ()=> {
-      showNotification('👋 MediCure loaded! Backend should be running on port 8000', 'info');
+    window.addEventListener('load',()=>{
+      showNotification('👋 MediCure loaded! Backend should be running on port 8000','info');
     });
   </script>
 </body>
