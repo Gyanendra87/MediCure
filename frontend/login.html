@@ -1,68 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MediCure — Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login / Register | Medical Chatbot</title>
   <style>
-    body{
-      display:flex;justify-content:center;align-items:center;
-      height:100vh;margin:0;
-      font-family:sans-serif;
-      background: linear-gradient(135deg,#667eea,#764ba2);
-      color:#fff;
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0078d4, #00c6ff);
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-    .login-box{
-      background:rgba(255,255,255,0.1);padding:40px;border-radius:12px;
-      box-shadow:0 8px 20px rgba(0,0,0,0.2);width:320px;text-align:center;
+    .container {
+      background-color: white;
+      border-radius: 15px;
+      padding: 30px;
+      width: 400px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      text-align: center;
+      transition: all 0.3s ease;
     }
-    input{width:100%;padding:12px;margin:12px 0;border-radius:8px;border:none;font-size:1rem;}
-    button{width:100%;padding:12px;margin-top:12px;border:none;border-radius:8px;
-      background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;font-weight:700;font-size:1rem;cursor:pointer;}
-    button:hover{transform:translateY(-2px);}
-    .notification{margin-top:12px;font-weight:700;}
+    h2 {
+      margin-bottom: 20px;
+      color: #0078d4;
+    }
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    .toggle {
+      color: #0078d4;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    #message {
+      margin-top: 10px;
+      color: red;
+    }
   </style>
 </head>
 <body>
-  <div class="login-box">
-    <h2>🏥 MediCure Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <div id="notif" class="notification"></div>
+
+  <div class="container" id="auth-box">
+    <h2 id="form-title">Login</h2>
+
+    <input type="text" id="username" placeholder="Enter Username" required />
+    <input type="password" id="password" placeholder="Enter Password" required />
+
+    <div>
+      <button id="auth-btn" onclick="submitForm()">Login</button>
+      <p id="toggle-text">New user? <span class="toggle" onclick="toggleForm()">Register here</span></p>
+    </div>
+
+    <div id="message"></div>
   </div>
 
   <script>
-    const API_BASE = 'http://127.0.0.1:8000';
+    let isRegister = false;
 
-    async function login(){
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const notif = document.getElementById('notif');
+    function toggleForm() {
+      isRegister = !isRegister;
+      document.getElementById("form-title").textContent = isRegister ? "Register" : "Login";
+      document.getElementById("auth-btn").textContent = isRegister ? "Register" : "Login";
+      document.getElementById("toggle-text").innerHTML = isRegister
+        ? 'Already have an account? <span class="toggle" onclick="toggleForm()">Login here</span>'
+        : 'New user? <span class="toggle" onclick="toggleForm()">Register here</span>';
+      document.getElementById("message").textContent = "";
+    }
 
-      if(!username || !password){
-        notif.textContent = '⚠ Please enter username & password';
+    async function submitForm() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const messageBox = document.getElementById("message");
+
+      if (!username || !password) {
+        messageBox.textContent = "Please enter both username and password.";
         return;
       }
 
-      notif.textContent = '⏳ Logging in...';
+      const endpoint = isRegister ? "register" : "login";
+      const url = `http://127.0.0.1:8000/auth/${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
 
       try {
-        const response = await fetch(`${API_BASE}/auth/login?user_id=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
-          method:'POST',
-          headers:{'accept':'application/json'}
-        });
+        const response = await fetch(url, { method: "POST" });
         const data = await response.json();
 
-        if(data.token){
-          localStorage.setItem('jwt_token', data.token);
-          notif.textContent = '✅ Login successful! Redirecting...';
-          setTimeout(()=>{ window.location.href='index.html'; }, 800);
+        if (response.ok) {
+          if (isRegister) {
+            messageBox.style.color = "green";
+            messageBox.textContent = `✅ ${data.message}. You can now login.`;
+            toggleForm();
+          } else {
+            // Save token and redirect to main page
+            localStorage.setItem("token", data.token);
+            window.location.href = "index.html";
+          }
         } else {
-          notif.textContent = '❌ Invalid username or password';
+          messageBox.style.color = "red";
+          messageBox.textContent = data.detail || "Something went wrong.";
         }
-      } catch(err){
-        notif.textContent = '❌ Server not responding!';
+      } catch (error) {
+        messageBox.style.color = "red";
+        messageBox.textContent = "Server error. Please try again.";
       }
     }
   </script>

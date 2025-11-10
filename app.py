@@ -1,12 +1,14 @@
 import os
 import tempfile
-from fastapi import FastAPI, APIRouter, Query, UploadFile, File, Header, HTTPException, Depends
+from fastapi import FastAPI, APIRouter, Query, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from graph_builder import graph, predict_remedy  # ✅ Now imports predict_remedy
+from sqlalchemy.orm import Session
+from database import SessionLocal, init_db, User, Report
+from graph_builder import graph, predict_remedy
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
-from auth import create_jwt_token, verify_jwt_token
+from passlib.context import CryptContext
 
 # ==========================
 # FastAPI Setup
@@ -21,7 +23,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global variable for last uploaded report
+# Initialize database
+init_db()
+
+# Password hasher
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+
+# Global variable for uploaded report
 report_context = ""
 
 # Routers
@@ -29,50 +37,51 @@ chat_router = APIRouter(prefix="/chat", tags=["Chat"])
 report_router = APIRouter(prefix="/report", tags=["Report"])
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
-# ==========================
-# Authentication Dependency
-# ==========================
-def get_current_user(authorization: str = Header(...)):
-    """
-    Verify JWT token in 'Authorization' header
-    """
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid auth header format")
-    token = authorization.split(" ")[1]
+# Dependency for DB Session
+def get_db():
+    db = SessionLocal()
     try:
-        payload = verify_jwt_token(token)
-        return payload["user_id"]
-    except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        yield db
+    finally:
+        db.close()
 
 # ==========================
-# Hardcoded Users
+# Auth Routes (Register + Login)
 # ==========================
-USERS = {
-    "user12": "mypassword123",
-    "user1": "test123"
-}
+@auth_router.post("/register")
+def register(username: str = Query(...), password: str = Query(...), db: Session = Depends(get_db)):
+    """
+    Register a new user in the database
+    """
+    existing_user = db.query(User).filter(User.username == username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
 
-# ==========================
-# Auth Routes
-# ==========================
+    hashed_password = pwd_context.hash(password)
+    new_user = User(username=username, password_hash=hashed_password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"message": f"User {username} registered successfully"}
+
 @auth_router.post("/login")
-def login(user_id: str = Query(...), password: str = Query(...)):
+def login(username: str = Query(...), password: str = Query(...), db: Session = Depends(get_db)):
     """
-    Generate JWT token if user_id and password match.
+    Login and check credentials
     """
-    if user_id not in USERS or USERS[user_id] != password:
-        raise HTTPException(status_code=401, detail="Invalid user ID or password")
-    token = create_jwt_token(user_id)
-    return {"token": token}
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not pwd_context.verify(password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    return {"message": f"Welcome {username}! You are now logged in."}
 
 # ==========================
 # Chatbot Route (QA + Home Remedies)
 # ==========================
 @chat_router.get("/ask")
-async def ask_question(query: str = Query(...), user_id: str = Depends(get_current_user)):
+async def ask_question(query: str = Query(...)):
     """
-    Ask a medical question. JWT required.
+    Ask a medical question (no authentication needed)
     """
     global report_context
     try:
@@ -81,16 +90,16 @@ async def ask_question(query: str = Query(...), user_id: str = Depends(get_curre
             disease_name = query.split("for")[-1].strip() if "for" in query.lower() else query
             remedy = predict_remedy(disease_name)
             answer = f"🌿 Home Remedy for {disease_name}: {remedy}"
-            return {"user": user_id, "answer": answer}
+            return {"answer": answer}
 
-        # Default medical QA (uses medical_book.pdf)
+        # Default medical QA
         initial_state = {
             "messages": [{"role": "user", "content": query}],
             "context": report_context
         }
         result = graph.invoke(initial_state)
         answer = result["messages"][-1]["content"]
-        return {"user": user_id, "answer": answer}
+        return {"answer": answer}
 
     except Exception as e:
         return {"error": str(e)}
@@ -99,9 +108,9 @@ async def ask_question(query: str = Query(...), user_id: str = Depends(get_curre
 # PDF Report Upload
 # ==========================
 @report_router.post("/upload")
-async def upload_report(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
+async def upload_report(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
-    Upload PDF medical report. JWT required.
+    Upload PDF medical report (no authentication needed)
     """
     global report_context
     try:
@@ -116,6 +125,7 @@ async def upload_report(file: UploadFile = File(...), user_id: str = Depends(get
 
         report_context = "\n".join([chunk.page_content for chunk in chunks])
 
+        # Generate summary using LLM
         llm = ChatGoogleGenerativeAI(
             model="models/gemini-2.5-flash",
             temperature=0.3,
@@ -138,10 +148,15 @@ async def upload_report(file: UploadFile = File(...), user_id: str = Depends(get
         final_response = llm.invoke(combined_prompt)
         summary_text = final_response.content if hasattr(final_response, "content") else str(final_response)
 
+        # Store report summary in DB
+        report_record = Report(file_name=file.filename, pdf_text=summary_text)
+        db.add(report_record)
+        db.commit()
+
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
-        return {"user": user_id, "summary": summary_text}
+        return {"summary": summary_text}
 
     except Exception as e:
         if 'tmp_path' in locals() and os.path.exists(tmp_path):
@@ -155,4 +170,4 @@ app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(report_router)
 
-print("✅ FastAPI Chatbot with JWT is ready!")
+print("✅ FastAPI Chatbot (DB + No Auth after Login) Ready!")
