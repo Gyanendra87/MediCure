@@ -1,127 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login / Register | Medical Chatbot</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0078d4, #00c6ff);
-      color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .container {
-      background-color: white;
-      border-radius: 15px;
-      padding: 30px;
-      width: 400px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-      text-align: center;
-      transition: all 0.3s ease;
-    }
-    h2 {
-      margin-bottom: 20px;
-      color: #0078d4;
-    }
-    input {
-      width: 90%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: #0078d4;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin: 10px 5px;
-    }
-    button:hover {
-      background-color: #005fa3;
-    }
-    .toggle {
-      color: #0078d4;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-    #message {
-      margin-top: 10px;
-      color: red;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Login / Register | MediCure AI</title>
+<style>
+  body { font-family: Arial,sans-serif; background: linear-gradient(135deg,#0078d4,#00c6ff); display:flex; justify-content:center; align-items:center; height:100vh; }
+  .container { background:white; border-radius:15px; padding:30px; width:400px; text-align:center; box-shadow:0 8px 16px rgba(0,0,0,0.2); }
+  h2 { color:#0078d4; margin-bottom:20px; }
+  input { width:90%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; }
+  button { background:#0078d4; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin:10px 5px; }
+  button:hover { background:#005fa3; }
+  .toggle { color:#0078d4; cursor:pointer; text-decoration:underline; }
+  #message { margin-top:10px; color:red; }
+</style>
 </head>
 <body>
-
-  <div class="container" id="auth-box">
-    <h2 id="form-title">Login</h2>
-
-    <input type="text" id="username" placeholder="Enter Username" required />
-    <input type="password" id="password" placeholder="Enter Password" required />
-
-    <div>
-      <button id="auth-btn" onclick="submitForm()">Login</button>
-      <p id="toggle-text">New user? <span class="toggle" onclick="toggleForm()">Register here</span></p>
-    </div>
-
-    <div id="message"></div>
+<div class="container" id="auth-box">
+  <h2 id="form-title">Login</h2>
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <div>
+    <button id="auth-btn" onclick="submitForm()">Login</button>
+    <p id="toggle-text">New user? <span class="toggle" onclick="toggleForm()">Register here</span></p>
   </div>
+  <div id="message"></div>
+</div>
 
-  <script>
-    let isRegister = false;
+<script>
+let isRegister = false;
+function toggleForm(){
+  isRegister=!isRegister;
+  document.getElementById("form-title").textContent=isRegister?"Register":"Login";
+  document.getElementById("auth-btn").textContent=isRegister?"Register":"Login";
+  document.getElementById("toggle-text").innerHTML=isRegister?
+    'Already have an account? <span class="toggle" onclick="toggleForm()">Login here</span>':
+    'New user? <span class="toggle" onclick="toggleForm()">Register here</span>';
+  document.getElementById("message").textContent="";
+}
 
-    function toggleForm() {
-      isRegister = !isRegister;
-      document.getElementById("form-title").textContent = isRegister ? "Register" : "Login";
-      document.getElementById("auth-btn").textContent = isRegister ? "Register" : "Login";
-      document.getElementById("toggle-text").innerHTML = isRegister
-        ? 'Already have an account? <span class="toggle" onclick="toggleForm()">Login here</span>'
-        : 'New user? <span class="toggle" onclick="toggleForm()">Register here</span>';
-      document.getElementById("message").textContent = "";
-    }
-
-    async function submitForm() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const messageBox = document.getElementById("message");
-
-      if (!username || !password) {
-        messageBox.textContent = "Please enter both username and password.";
-        return;
+async function submitForm(){
+  const username=document.getElementById("username").value.trim();
+  const password=document.getElementById("password").value.trim();
+  const messageBox=document.getElementById("message");
+  if(!username||!password){messageBox.textContent="Enter both fields."; return;}
+  const endpoint=isRegister?"register":"login";
+  const url=`http://127.0.0.1:8000/auth/${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+  try{
+    const response=await fetch(url,{method:"POST"});
+    const data=await response.json();
+    if(response.ok){
+      if(isRegister){
+        messageBox.style.color="green";
+        messageBox.textContent=`✅ ${data.message}. Login now.`;
+        toggleForm();
+      } else {
+        window.location.href="index.html";
       }
-
-      const endpoint = isRegister ? "register" : "login";
-      const url = `http://127.0.0.1:8000/auth/${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-
-      try {
-        const response = await fetch(url, { method: "POST" });
-        const data = await response.json();
-
-        if (response.ok) {
-          if (isRegister) {
-            messageBox.style.color = "green";
-            messageBox.textContent = `✅ ${data.message}. You can now login.`;
-            toggleForm();
-          } else {
-            // Save token and redirect to main page
-            localStorage.setItem("token", data.token);
-            window.location.href = "index.html";
-          }
-        } else {
-          messageBox.style.color = "red";
-          messageBox.textContent = data.detail || "Something went wrong.";
-        }
-      } catch (error) {
-        messageBox.style.color = "red";
-        messageBox.textContent = "Server error. Please try again.";
-      }
+    } else {
+      messageBox.style.color="red"; messageBox.textContent=data.detail||"Server error.";
     }
-  </script>
+  } catch(e){
+    messageBox.style.color="red"; messageBox.textContent="Server error. Try again.";
+  }
+}
+</script>
 </body>
 </html>

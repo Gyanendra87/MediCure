@@ -5,365 +5,416 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>MediCure — Home Remedies AI</title>
   <style>
-    /* ---------- Reset & Body ---------- */
+    /* ---------- Reset & Base ---------- */
     *{box-sizing:border-box;margin:0;padding:0}
     body{
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-      min-height:100vh;padding:20px;color:#111;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      min-height:100vh;padding:20px;color:#111;position:relative;overflow-x:hidden;
     }
-    .container{max-width:1200px;margin:0 auto}
+    body::before{
+      content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+      background:radial-gradient(circle at 20% 50%, rgba(120,81,169,0.3) 0%, transparent 50%),
+                 radial-gradient(circle at 80% 80%, rgba(102,126,234,0.3) 0%, transparent 50%);
+      pointer-events:none;
+    }
+    .container{max-width:1200px;margin:0 auto;position:relative;z-index:1}
 
-    header{text-align:center;color:#fff;margin-bottom:30px}
-    h1{font-size:2.4rem;margin-bottom:6px;text-shadow:2px 2px 8px rgba(0,0,0,0.25)}
-    .tagline{opacity:.95;color:#f3f6ff}
+    /* ---------- Header ---------- */
+    header{text-align:center;color:#fff;margin-bottom:40px;padding:30px 0}
+    h1{
+      font-size:3rem;margin-bottom:12px;font-weight:800;
+      background:linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;filter:drop-shadow(0 4px 12px rgba(102,126,234,0.4));
+      animation:glow 3s ease-in-out infinite alternate;
+    }
+    @keyframes glow{
+      from{filter:drop-shadow(0 4px 12px rgba(102,126,234,0.4))}
+      to{filter:drop-shadow(0 4px 20px rgba(240,147,251,0.6))}
+    }
+    .tagline{
+      opacity:.9;color:#e0e7ff;font-size:1.1rem;font-weight:300;letter-spacing:0.5px;
+      margin-top:8px;
+    }
+    .header-icon{font-size:2.8rem;margin-bottom:10px;animation:float 3s ease-in-out infinite}
+    @keyframes float{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(-10px)}
+    }
 
     /* ---------- Tabs ---------- */
-    .tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-    .tab-button{
-      flex:1;min-width:150px;padding:14px 20px;background:#fff;border:0;border-radius:10px;
-      font-weight:600;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,0.08);
-      transition:all .25s
+    .tabs{
+      display:flex;gap:12px;margin-bottom:30px;flex-wrap:wrap;
+      justify-content:center;
     }
-    .tab-button:hover{transform:translateY(-4px)}
-    .tab-button.active{background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff}
+    .tab-button{
+      flex:1;min-width:180px;max-width:250px;padding:16px 24px;
+      background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);
+      border:2px solid rgba(255,255,255,0.2);border-radius:16px;
+      font-weight:600;font-size:1rem;cursor:pointer;
+      box-shadow:0 8px 32px rgba(0,0,0,0.1);
+      transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);
+      position:relative;overflow:hidden;
+    }
+    .tab-button::before{
+      content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition:left .5s;
+    }
+    .tab-button:hover::before{left:100%}
+    .tab-button:hover{
+      transform:translateY(-4px) scale(1.02);
+      box-shadow:0 12px 40px rgba(102,126,234,0.3);
+    }
+    .tab-button.active{
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      color:#fff;border-color:transparent;
+      box-shadow:0 12px 40px rgba(102,126,234,0.4);
+    }
 
+    /* ---------- Tab Content ---------- */
     .tab-content{
-      display:none;background:#fff;border-radius:15px;padding:26px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.18);animation:fadeIn .45s
+      display:none;background:rgba(255,255,255,0.98);backdrop-filter:blur(20px);
+      border-radius:24px;padding:40px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.3);
+      animation:fadeInUp .5s cubic-bezier(0.4, 0, 0.2, 1);
+      border:1px solid rgba(255,255,255,0.2);
     }
     .tab-content.active{display:block}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
-    /* ---------- Upload area ---------- */
-    .upload-area{
-      border:3px dashed rgba(255,255,255,0.15);border-radius:12px;padding:36px;text-align:center;
-      background:#f8f9ff;cursor:pointer;transition:all .22s;
+    @keyframes fadeInUp{
+      from{opacity:0;transform:translateY(30px)}
+      to{opacity:1;transform:translateY(0)}
     }
-    .upload-area:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(0,0,0,0.08)}
-    .upload-area.dragover{background:#e6eeff;border-color:#764ba2;transform:translateY(-2px)}
-    .upload-icon{font-size:3rem;margin-bottom:12px}
 
-    .file-info{margin-top:18px;padding:14px;background:#e8f5e9;border-radius:8px;display:none}
-    .report-content{margin-top:18px;padding:18px;background:#f5f5f5;border-radius:8px;max-height:420px;overflow:auto;white-space:pre-wrap;font-family:monospace;font-size:.92rem}
+    .tab-content h2{
+      font-size:1.8rem;margin-bottom:20px;color:#1a1a2e;font-weight:700;
+      display:flex;align-items:center;gap:10px;
+    }
+
+    /* ---------- Upload Area ---------- */
+    .upload-area{
+      border:3px dashed rgba(102,126,234,0.3);border-radius:20px;padding:50px;
+      text-align:center;background:linear-gradient(135deg, #f8f9ff 0%, #e8edff 100%);
+      cursor:pointer;transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);
+      position:relative;overflow:hidden;
+    }
+    .upload-area::before{
+      content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+      background:radial-gradient(circle, rgba(102,126,234,0.1) 0%, transparent 70%);
+      animation:pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{transform:scale(1);opacity:0.5}
+      50%{transform:scale(1.1);opacity:0.3}
+    }
+    .upload-area:hover{
+      transform:translateY(-8px);
+      box-shadow:0 20px 60px rgba(102,126,234,0.2);
+      border-color:rgba(102,126,234,0.6);
+    }
+    .upload-icon{font-size:4rem;margin-bottom:15px;animation:bounce 2s ease-in-out infinite}
+    @keyframes bounce{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(-15px)}
+    }
+    .upload-area h3{color:#667eea;font-size:1.3rem;margin-bottom:8px;font-weight:600}
+
+    .file-info{
+      margin-top:24px;padding:20px;background:linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+      border-radius:16px;display:none;box-shadow:0 8px 24px rgba(150,230,161,0.3);
+    }
+    .report-content{
+      margin-top:24px;padding:24px;background:#f8f9fa;border-radius:16px;
+      max-height:420px;overflow:auto;white-space:pre-wrap;
+      font-family:'Courier New', monospace;font-size:.95rem;
+      border:1px solid #e0e0e0;display:none;
+      box-shadow:inset 0 2px 8px rgba(0,0,0,0.05);
+    }
 
     /* ---------- Chat ---------- */
-    .chatbot-container{display:flex;flex-direction:column;height:520px}
-    .chat-messages{flex:1;overflow:auto;padding:18px;background:#f8f9fa;border-radius:10px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px}
-    .message{padding:12px 16px;border-radius:14px;max-width:82%;animation:slideIn .28s}
-    @keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-    .message.user{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;margin-left:auto;text-align:right}
-    .message.bot{background:#fff;border:1px solid #e6e6e6;color:#111}
+    .chatbot-container{display:flex;flex-direction:column;height:550px}
+    .chat-messages{
+      flex:1;overflow:auto;padding:24px;
+      background:linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius:20px;margin-bottom:16px;display:flex;flex-direction:column;gap:14px;
+      box-shadow:inset 0 2px 12px rgba(0,0,0,0.08);
+    }
+    .chat-messages::-webkit-scrollbar{width:8px}
+    .chat-messages::-webkit-scrollbar-track{background:transparent}
+    .chat-messages::-webkit-scrollbar-thumb{background:rgba(102,126,234,0.3);border-radius:10px}
 
-    .chat-input-area{display:flex;gap:10px}
-    .chat-input{flex:1;padding:14px;border-radius:26px;border:2px solid #e6e6e6;font-size:1rem;outline:none}
-    .chat-input:focus{border-color:#667eea;box-shadow:0 6px 20px rgba(102,126,234,0.12)}
-    .send-button{padding:12px 22px;border-radius:24px;border:0;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:700;cursor:pointer}
-    .send-button:hover{transform:translateY(-3px)}
+    .message{
+      padding:14px 18px;border-radius:18px;max-width:85%;
+      animation:slideIn .4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+      line-height:1.5;
+    }
+    @keyframes slideIn{
+      from{opacity:0;transform:translateY(20px) scale(0.95)}
+      to{opacity:1;transform:translateY(0) scale(1)}
+    }
+    .message.user{
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      color:#fff;margin-left:auto;text-align:right;
+      border-bottom-right-radius:4px;
+    }
+    .message.bot{
+      background:#fff;color:#1a1a2e;
+      border-bottom-left-radius:4px;border:1px solid rgba(0,0,0,0.05);
+    }
+
+    .chat-input-area{display:flex;gap:12px;align-items:center}
+    .chat-input{
+      flex:1;padding:16px 24px;border-radius:30px;
+      border:2px solid #e0e7ff;font-size:1rem;outline:none;
+      transition:all .3s;background:#fff;
+    }
+    .chat-input:focus{
+      border-color:#667eea;
+      box-shadow:0 8px 24px rgba(102,126,234,0.15);
+      transform:translateY(-2px);
+    }
+    .send-button{
+      padding:16px 32px;border-radius:30px;border:0;
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      color:#fff;font-weight:700;cursor:pointer;font-size:1rem;
+      transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow:0 8px 24px rgba(102,126,234,0.3);
+    }
+    .send-button:hover{
+      transform:translateY(-4px);
+      box-shadow:0 12px 32px rgba(102,126,234,0.4);
+    }
+    .send-button:active{transform:translateY(-2px)}
 
     /* ---------- Remedy Form ---------- */
-    .remedy-form{display:grid;gap:18px}
-    .form-group{display:flex;flex-direction:column}
-    label{font-weight:700;margin-bottom:8px}
-    input[type="text"],select,textarea{padding:12px;border-radius:8px;border:2px solid #e6e6e6;font-size:1rem}
-    textarea{min-height:100px;resize:vertical}
-    .predict-button{padding:14px 22px;border-radius:8px;border:0;background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;font-weight:700;cursor:pointer;transition:all .25s}
-    .predict-button:hover{transform:translateY(-3px)}
-    .remedy-results{margin-top:18px;padding:18px;border-radius:10px;background:linear-gradient(135deg,#ffecd2,#fcb69f);display:none}
-    .remedy-item{background:#fff;padding:12px;border-radius:8px;margin-bottom:10px;border-left:4px solid #ff6b6b}
+    .remedy-form{display:grid;gap:20px}
+    label{font-weight:700;margin-bottom:8px;color:#1a1a2e;font-size:1.05rem}
+    input[type="text"],select,textarea{
+      padding:16px;border-radius:14px;border:2px solid #e0e7ff;
+      font-size:1rem;transition:all .3s;background:#fff;
+    }
+    input[type="text"]:focus,select:focus,textarea:focus{
+      border-color:#667eea;outline:none;
+      box-shadow:0 8px 24px rgba(102,126,234,0.15);
+      transform:translateY(-2px);
+    }
+    .predict-button{
+      padding:16px 32px;border-radius:14px;border:0;
+      background:linear-gradient(135deg,#11998e,#38ef7d);
+      color:#fff;font-weight:700;cursor:pointer;font-size:1.05rem;
+      transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow:0 8px 24px rgba(17,153,142,0.3);
+    }
+    .predict-button:hover{
+      transform:translateY(-4px);
+      box-shadow:0 12px 32px rgba(17,153,142,0.4);
+    }
 
-    .warning{background:#fff3cd;border-left:4px solid #ffc107;padding:14px;border-radius:8px;margin-top:18px}
-    
-    .info-box{background:#e3f2fd;border-left:4px solid #2196f3;padding:14px;border-radius:8px;margin-bottom:18px}
+    .remedy-results{margin-top:24px}
+    .remedy-item{
+      padding:24px;background:linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      border-radius:16px;box-shadow:0 8px 24px rgba(252,182,159,0.3);
+      line-height:1.7;
+    }
 
-    /* ---------- Notification ---------- */
-    .notification{position:fixed;top:22px;right:22px;padding:12px 18px;border-radius:10px;color:#fff;font-weight:700;z-index:9999;box-shadow:0 10px 30px rgba(0,0,0,0.18)}
+    /* ---------- Info Boxes ---------- */
+    .info-box{
+      background:linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      border-left:5px solid #2196f3;padding:18px;border-radius:14px;
+      margin-bottom:24px;box-shadow:0 4px 16px rgba(33,150,243,0.2);
+    }
+    .warning{
+      background:linear-gradient(135deg, #fff3cd 0%, #ffe6a2 100%);
+      border-left:5px solid #ffc107;padding:18px;border-radius:14px;
+      margin-top:24px;box-shadow:0 4px 16px rgba(255,193,7,0.2);
+    }
+
+    /* ---------- Notifications ---------- */
+    .notification{
+      position:fixed;top:30px;right:30px;padding:16px 24px;
+      border-radius:16px;color:#fff;font-weight:700;z-index:9999;
+      box-shadow:0 12px 40px rgba(0,0,0,0.25);
+      animation:slideInRight .4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes slideInRight{
+      from{opacity:0;transform:translateX(100px)}
+      to{opacity:1;transform:translateX(0)}
+    }
     .note-success{background:linear-gradient(135deg,#00d4aa,#00f2fe)}
     .note-error{background:linear-gradient(135deg,#f5576c,#f093fb)}
     .note-info{background:linear-gradient(135deg,#667eea,#764ba2)}
 
-    /* ---------- Responsive ---------- */
-    @media (max-width:900px){
-      .tab-button{min-width:120px;padding:12px}
-      .chatbot-container{height:420px}
+    /* ---------- Doctor Actions ---------- */
+    .doctor-actions {
+      display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;
     }
-    @media (max-width:620px){
+    .doctor-actions button {
+      flex:1;min-width:160px;padding:16px 24px;border-radius:16px;
+      border:0;font-weight:700;cursor:pointer;color:#fff;
+      transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size:1rem;box-shadow:0 8px 24px rgba(0,0,0,0.15);
+    }
+    .video-call{background:linear-gradient(135deg,#6a11cb,#2575fc)}
+    .voice-call{background:linear-gradient(135deg,#ff9966,#ff5e62)}
+    .whatsapp{background:linear-gradient(135deg,#25D366,#128C7E)}
+    .doctor-actions button:hover{
+      transform:translateY(-6px) scale(1.02);
+      box-shadow:0 12px 36px rgba(0,0,0,0.25);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media(max-width:768px){
+      h1{font-size:2rem}
       .tabs{flex-direction:column}
+      .tab-button{max-width:100%}
+      .tab-content{padding:24px}
+      .doctor-actions{flex-direction:column}
+      .doctor-actions button{min-width:100%}
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>🏥 MediCure: Your Personal AI Doctor</h1>
-      <p class="tagline">Upload reports, chat with AI, and discover home remedies</p>
+      <div class="header-icon">🏥</div>
+      <h1>MediCure</h1>
+      <p class="tagline">Your Personal AI Doctor — Upload reports, chat with AI, and discover home remedies</p>
     </header>
 
-    <div class="tabs" role="tablist">
+    <div class="tabs">
       <button class="tab-button active" onclick="switchTab(event,'upload')">📄 Upload Report</button>
       <button class="tab-button" onclick="switchTab(event,'remedies')">🌿 Home Remedies</button>
       <button class="tab-button" onclick="switchTab(event,'chatbot')">💬 Medical Chat</button>
     </div>
 
-    <!-- UPLOAD -->
+    <!-- Upload -->
     <div id="upload" class="tab-content active">
-      <h2>Upload Your Medical Report</h2>
-      <p style="color:#666;margin:12px 0">Supported: PDF files. Your report will be analyzed by our AI backend.</p>
-
+      <h2>📄 Upload Your Medical Report</h2>
+      <p style="color:#666;margin:12px 0 24px 0">Supported: PDF files. Your report will be analyzed by our AI backend.</p>
       <div id="uploadArea" class="upload-area" onclick="triggerFile()">
         <div class="upload-icon">📁</div>
         <h3>Click to select or drag & drop your report</h3>
         <p style="color:#666;margin-top:8px">PDF files only</p>
       </div>
-
       <input id="fileInput" type="file" accept=".pdf" style="display:none" onchange="handleFile(this.files[0])">
-
       <div id="fileInfo" class="file-info">
         <strong>Selected File:</strong> <span id="fileName"></span><br>
         <strong>Size:</strong> <span id="fileSize"></span>
       </div>
-
-      <div id="reportContent" class="report-content" style="display:none">
+      <div id="reportContent" class="report-content">
         <strong>Report Analysis:</strong><br><br>
         <div id="reportText"></div>
       </div>
-
       <div class="warning">
-        <strong>⚠️ Privacy Notice:</strong> Your data is processed securely. Ensure compliance with HIPAA/local privacy laws.
+        <strong>⚠️ Privacy Notice:</strong> Your data is processed securely.
       </div>
     </div>
 
-    <!-- REMEDIES -->
+    <!-- Remedies -->
     <div id="remedies" class="tab-content">
       <h2>🌿 Home Remedy Finder</h2>
-      
-      <div class="info-box">
-        <strong>💡 How it works:</strong> Enter a disease or symptom name, and our AI will search our database of natural home remedies to provide you with effective, time-tested solutions.
-      </div>
-
+      <div class="info-box"><strong>💡 How it works:</strong> Enter a disease or symptom name to discover natural remedies.</div>
       <div class="remedy-form">
-        <div class="form-group">
-          <label for="diseaseInput">Disease or Condition</label>
-          <input id="diseaseInput" type="text" placeholder="e.g., headache, cold, fever, acidity, insomnia..." onkeydown="handleRemedyKeypress(event)">
-        </div>
-
+        <label for="diseaseInput">Disease or Condition</label>
+        <input id="diseaseInput" type="text" placeholder="e.g., headache, cold, fever..." onkeydown="handleRemedyKeypress(event)">
         <button class="predict-button" onclick="getRemedies()">🔍 Find Home Remedies</button>
       </div>
-
       <div id="remedyResults" class="remedy-results"></div>
-
-      <div class="warning" style="margin-top:18px">
-        <strong>⚠️ Important:</strong> Home remedies are complementary. Seek professional medical care for serious or persistent symptoms.
-      </div>
     </div>
 
-    <!-- CHATBOT -->
+    <!-- Chatbot -->
     <div id="chatbot" class="tab-content">
-      <h2>Medical AI Assistant</h2>
-      
-      <div class="info-box">
-        <strong>💬 Ask anything:</strong> Get answers about diseases, symptoms, treatments, or follow up on your uploaded report. This chatbot uses AI to provide general medical information.
-      </div>
-
+      <h2>💬 Medical AI Assistant</h2>
       <div class="chatbot-container">
-        <div id="chatMessages" class="chat-messages" aria-live="polite">
-          <div class="message bot">Hello! I'm your medical AI assistant. Ask me about diseases, symptoms, treatments, or your uploaded report.</div>
+        <div id="chatMessages" class="chat-messages">
+          <div class="message bot">Hello! I'm your AI medical assistant. Ask me anything about health, symptoms, or treatments.</div>
         </div>
-
         <div class="chat-input-area">
           <input id="chatInput" class="chat-input" type="text" placeholder="Ask a medical question..." onkeydown="handleChatKeypress(event)">
           <button class="send-button" onclick="sendMessage()">Send</button>
         </div>
       </div>
 
-      <div class="warning" style="margin-top:16px">
-        <strong>⚠️ Medical Disclaimer:</strong> This chatbot provides general information only and is not a replacement for professional medical advice, diagnosis, or treatment.
+      <!-- Doctor Contact Section -->
+      <div class="info-box" style="margin-top:28px">
+        <strong>👨‍⚕️ Need real help?</strong> Connect with our doctor directly for personalized care.
+      </div>
+      <div class="doctor-actions">
+        <button class="video-call" onclick="videoCall()">📹 Video Call</button>
+        <button class="voice-call" onclick="voiceCall()">📞 Voice Call</button>
+        <button class="whatsapp" onclick="whatsappDoctor()">💬 WhatsApp Doctor</button>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ Note:</strong> Video and voice calls are demo features — WhatsApp will connect to the doctor's real number.
       </div>
     </div>
-
   </div>
 
   <script>
     const API_BASE = 'http://127.0.0.1:8000';
 
-    /***********************
-     * Authentication Check
-     ***********************/
-    let token = localStorage.getItem('jwt_token');
-    if(!token){
-      window.location.href = 'login.html';
-    }
-
-    function getAuthHeaders(){
-      return { 'Authorization': `Bearer ${token}` };
-    }
-
-    /***********************
-     * Utility & UI Helpers
-     ***********************/
     function showNotification(text,type='info'){
-      const existing = document.querySelector('.notification');
-      if(existing) existing.remove();
-      const div = document.createElement('div');
-      div.className = 'notification ' + (type==='success'?'note-success':type==='error'?'note-error':'note-info');
-      div.textContent = text;
-      document.body.appendChild(div);
-      setTimeout(()=>div.remove(),3500);
+      const n=document.createElement('div');
+      n.className='notification '+(type==='success'?'note-success':type==='error'?'note-error':'note-info');
+      n.textContent=text;document.body.appendChild(n);
+      setTimeout(()=>n.remove(),3500);
     }
-
-    function switchTab(ev,tabId){
+    function switchTab(ev,id){
       document.querySelectorAll('.tab-button').forEach(b=>b.classList.remove('active'));
-      if(ev && ev.currentTarget) ev.currentTarget.classList.add('active');
+      ev.currentTarget.classList.add('active');
       document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      if(tabId==='chatbot') setTimeout(()=>document.getElementById('chatInput').focus(),80);
-      if(tabId==='remedies') setTimeout(()=>document.getElementById('diseaseInput').focus(),80);
+      document.getElementById(id).classList.add('active');
     }
 
-    function triggerFile(){ document.getElementById('fileInput').click(); }
-
-    /***********************
-     * Drag & Drop for Upload
-     ***********************/
-    const uploadArea = document.getElementById('uploadArea');
-    ['dragenter','dragover','dragleave','drop'].forEach(ev=>{
-      uploadArea.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();});
-    });
-    ['dragenter','dragover'].forEach(ev=>{uploadArea.addEventListener(ev,()=>uploadArea.classList.add('dragover'));});
-    ['dragleave','drop'].forEach(ev=>{uploadArea.addEventListener(ev,()=>uploadArea.classList.remove('dragover'));});
-    uploadArea.addEventListener('drop',e=>{
-      const files = e.dataTransfer.files;
-      if(files.length) handleFile(files[0]);
-    });
-
-    /***********************
-     * File Handling
-     ***********************/
-    function bytesToKB(n){ return (n/1024).toFixed(2)+' KB'; }
-
+    function triggerFile(){document.getElementById('fileInput').click();}
     async function handleFile(file){
-      if(!file) return;
-      if(!file.name.toLowerCase().endsWith('.pdf')) { showNotification('❌ Please select a PDF file','error'); return; }
-
-      document.getElementById('fileInfo').style.display='block';
-      document.getElementById('fileName').textContent = file.name;
-      document.getElementById('fileSize').textContent = bytesToKB(file.size);
-
-      const reportTextEl = document.getElementById('reportText');
-      document.getElementById('reportContent').style.display='block';
-      reportTextEl.textContent = '⏳ Uploading and analyzing report...';
+      if(!file)return;
       showNotification('⏳ Uploading report...','info');
-
-      const formData = new FormData();
-      formData.append("file",file);
-
-      try{
-        const response = await fetch(`${API_BASE}/report/upload`,{
-          method:'POST',
-          body:formData,
-          headers:getAuthHeaders()
-        });
-        const data = await response.json();
-        if(data.summary){
-          reportTextEl.textContent = data.summary;
-          showNotification('✅ Report analyzed successfully!','success');
-        } else if(data.error){
-          reportTextEl.textContent = "⚠ "+data.error;
-          showNotification('❌ Error analyzing report','error');
-        }
-      } catch(err){
-        reportTextEl.textContent = "⚠ Server not responding!";
-        showNotification('❌ Server not responding','error');
-      }
-    }
-
-    /***********************
-     * Chatbot
-     ***********************/
-    function appendChatMessage(text,isUser=false){
-      const chatMessages = document.getElementById('chatMessages');
-      const div = document.createElement('div');
-      div.className = 'message '+(isUser?'user':'bot');
-      div.textContent = text;
-      chatMessages.appendChild(div);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+      const form=new FormData();form.append("file",file);
+      const r=await fetch(`${API_BASE}/report/upload`,{method:'POST',body:form});
+      const data=await r.json();
+      const txt=document.getElementById('reportText');
+      document.getElementById('reportContent').style.display='block';
+      txt.textContent=data.summary||data.error||'Error analyzing report';
     }
 
     async function sendMessage(){
-      const input = document.getElementById('chatInput');
-      const text = input.value.trim();
-      if(!text) return;
-
-      appendChatMessage(text,true);
-      input.value = '';
+      const i=document.getElementById('chatInput');const q=i.value.trim();if(!q)return;
+      appendChatMessage(q,true);i.value='';
       appendChatMessage('⏳ Thinking...',false);
-
-      try{
-        const response = await fetch(`${API_BASE}/chat/ask?query=${encodeURIComponent(text)}`,{
-          headers:getAuthHeaders()
-        });
-        const data = await response.json();
-        const messages = document.getElementById('chatMessages');
-        messages.removeChild(messages.lastChild);
-
-        if(data.answer) appendChatMessage(data.answer,false);
-        else if(data.error) appendChatMessage("⚠ "+data.error,false);
-      } catch(err){
-        const messages = document.getElementById('chatMessages');
-        messages.removeChild(messages.lastChild);
-        appendChatMessage("⚠ Server not responding!",false);
-      }
+      const r=await fetch(`${API_BASE}/chat/ask?query=${encodeURIComponent(q)}`);const d=await r.json();
+      document.querySelectorAll('.message.bot:last-child')[0]?.remove();
+      appendChatMessage(d.answer||d.error||'No response',false);
     }
-
-    function handleChatKeypress(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } }
-
-    /***********************
-     * Home Remedies
-     ***********************/
+    function appendChatMessage(t,u=false){const c=document.getElementById('chatMessages');const m=document.createElement('div');m.className='message '+(u?'user':'bot');m.textContent=t;c.appendChild(m);c.scrollTop=c.scrollHeight;}
+    function handleChatKeypress(e){if(e.key==='Enter'){e.preventDefault();sendMessage();}}
+    function handleRemedyKeypress(e){if(e.key==='Enter'){e.preventDefault();getRemedies();}}
     async function getRemedies(){
-      const disease = document.getElementById('diseaseInput').value.trim();
-      if(!disease){ showNotification('⚠️ Please enter a disease or condition name','error'); return; }
-
-      const resDiv = document.getElementById('remedyResults');
-      resDiv.innerHTML = '<p style="text-align:center">🔍 Searching our home remedies database...</p>';
-      resDiv.style.display='block';
-
-      try{
-        const response = await fetch(`${API_BASE}/chat/ask?query=home remedies for ${encodeURIComponent(disease)}`,{
-          headers:getAuthHeaders()
-        });
-        const data = await response.json();
-        if(data.answer){
-          const formattedAnswer = data.answer.replace(/\n/g,'<br>');
-          resDiv.innerHTML = `<h3>🌿 Home Remedies for "${disease}"</h3><div class="remedy-item">${formattedAnswer}</div>`;
-          showNotification('✅ Remedies found!','success');
-        } else if(data.error){
-          resDiv.innerHTML = `<p style="text-align:center">⚠ ${data.error}</p>`;
-          showNotification('❌ Error fetching remedies','error');
-        }
-      } catch(err){
-        resDiv.innerHTML = '<p style="text-align:center">⚠ Server not responding!</p>';
-        showNotification('❌ Server not responding','error');
-      }
-      resDiv.scrollIntoView({behavior:'smooth',block:'nearest'});
+      const d=document.getElementById('diseaseInput').value.trim();
+      if(!d){showNotification('Enter a disease','error');return;}
+      const r=await fetch(`${API_BASE}/chat/ask?query=home remedies for ${encodeURIComponent(d)}`);
+      const data=await r.json();
+      document.getElementById('remedyResults').innerHTML=`<div class='remedy-item'>${data.answer||data.error}</div>`;
     }
 
-    function handleRemedyKeypress(e){ if(e.key==='Enter'){ e.preventDefault(); getRemedies(); } }
-
-    /***********************
-     * Logout
-     ***********************/
-    function logout(){
-      localStorage.removeItem('jwt_token');
-      window.location.href='login.html';
+    // Doctor contact functions
+    function videoCall(){
+      alert("📹 Starting dummy video call with Doctor...");
+      showNotification("Simulating video call...","info");
+    }
+    function voiceCall(){
+      alert("📞 Starting dummy voice call with Doctor...");
+      showNotification("Simulating voice call...","info");
+    }
+    function whatsappDoctor(){
+      window.open("https://wa.me/918726717318","_blank");
+      showNotification("Opening WhatsApp chat with Doctor...","success");
     }
 
-    /***********************
-     * Startup
-     ***********************/
-    window.addEventListener('load',()=>{
-      showNotification('👋 MediCure loaded! Backend should be running on port 8000','info');
-    });
+    window.addEventListener('load',()=>showNotification('👋 MediCure loaded successfully!','success'));
   </script>
 </body>
 </html>
