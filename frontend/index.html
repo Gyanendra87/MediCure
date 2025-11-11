@@ -49,7 +49,7 @@
       justify-content:center;
     }
     .tab-button{
-      flex:1;min-width:180px;max-width:250px;padding:16px 24px;
+      flex:1;min-width:160px;max-width:220px;padding:16px 24px;
       background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);
       border:2px solid rgba(255,255,255,0.2);border-radius:16px;
       font-weight:600;font-size:1rem;cursor:pointer;
@@ -219,6 +219,20 @@
       line-height:1.7;
     }
 
+    /* ---------- Disease Prediction ---------- */
+    .prediction-section{margin-top:20px}
+    .result-section{
+      margin-top:24px;padding:24px;
+      background:linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+      border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.1);
+      display:none;
+    }
+    .result-section h3{color:#1a1a2e;margin-bottom:16px;font-size:1.4rem}
+    .result-section p{margin-bottom:12px;color:#2c3e50}
+    .result-section ul{margin:8px 0 16px 20px;color:#34495e}
+    .result-section li{margin-bottom:6px;line-height:1.6}
+    .result-section strong{color:#667eea}
+
     /* ---------- Info Boxes ---------- */
     .info-box{
       background:linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
@@ -285,6 +299,7 @@
 
     <div class="tabs">
       <button class="tab-button active" onclick="switchTab(event,'upload')">📄 Upload Report</button>
+      <button class="tab-button" onclick="switchTab(event,'prediction')">🩺 Disease Prediction</button>
       <button class="tab-button" onclick="switchTab(event,'remedies')">🌿 Home Remedies</button>
       <button class="tab-button" onclick="switchTab(event,'chatbot')">💬 Medical Chat</button>
     </div>
@@ -309,6 +324,39 @@
       </div>
       <div class="warning">
         <strong>⚠️ Privacy Notice:</strong> Your data is processed securely.
+      </div>
+    </div>
+
+    <!-- Disease Prediction -->
+    <div id="prediction" class="tab-content">
+      <h2>🩺 Disease Prediction Assistant</h2>
+      <div class="info-box">
+        <strong>💡 How it works:</strong> Enter your symptoms separated by commas, and our AI will predict possible diseases with recommendations.
+      </div>
+      
+      <div class="prediction-section">
+        <label for="symptoms">Enter Symptoms (comma separated):</label>
+        <input id="symptoms" type="text" placeholder="e.g., itching, skin rash, joint pain" onkeydown="handlePredictionKeypress(event)">
+        <button class="predict-button" onclick="predictDisease()">🔍 Predict Disease</button>
+      </div>
+
+      <div id="predictionResult" class="result-section">
+        <h3>🎯 Prediction Result</h3>
+        <p><strong>Disease:</strong> <span id="disease"></span></p>
+        <p><strong>Description:</strong> <span id="description"></span></p>
+        <p><strong>💊 Medications:</strong></p>
+        <ul id="medications"></ul>
+        <p><strong>🥗 Diet Recommendations:</strong></p>
+        <ul id="diet"></ul>
+        <p><strong>💪 Workout Suggestions:</strong> <span id="workout"></span></p>
+        <p><strong>🌿 Home Remedies:</strong></p>
+        <ul id="homeRemedies"></ul>
+        <p><strong>🧘 Yogasan:</strong></p>
+        <ul id="yogasan"></ul>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ Disclaimer:</strong> This is an AI-based prediction tool. Always consult a healthcare professional for accurate diagnosis.
       </div>
     </div>
 
@@ -362,6 +410,7 @@
       n.textContent=text;document.body.appendChild(n);
       setTimeout(()=>n.remove(),3500);
     }
+    
     function switchTab(ev,id){
       document.querySelectorAll('.tab-button').forEach(b=>b.classList.remove('active'));
       ev.currentTarget.classList.add('active');
@@ -369,38 +418,144 @@
       document.getElementById(id).classList.add('active');
     }
 
+    // ========== Upload Report ==========
     function triggerFile(){document.getElementById('fileInput').click();}
     async function handleFile(file){
       if(!file)return;
       showNotification('⏳ Uploading report...','info');
       const form=new FormData();form.append("file",file);
-      const r=await fetch(`${API_BASE}/report/upload`,{method:'POST',body:form});
-      const data=await r.json();
-      const txt=document.getElementById('reportText');
-      document.getElementById('reportContent').style.display='block';
-      txt.textContent=data.summary||data.error||'Error analyzing report';
+      try{
+        const r=await fetch(`${API_BASE}/report/upload`,{method:'POST',body:form});
+        const data=await r.json();
+        const txt=document.getElementById('reportText');
+        document.getElementById('reportContent').style.display='block';
+        txt.textContent=data.summary||data.error||'Error analyzing report';
+        if(data.summary)showNotification('✅ Report analyzed!','success');
+        else showNotification('⚠️ Analysis failed','error');
+      }catch(e){
+        showNotification('❌ Upload failed','error');
+      }
     }
 
-    async function sendMessage(){
-      const i=document.getElementById('chatInput');const q=i.value.trim();if(!q)return;
-      appendChatMessage(q,true);i.value='';
-      appendChatMessage('⏳ Thinking...',false);
-      const r=await fetch(`${API_BASE}/chat/ask?query=${encodeURIComponent(q)}`);const d=await r.json();
-      document.querySelectorAll('.message.bot:last-child')[0]?.remove();
-      appendChatMessage(d.answer||d.error||'No response',false);
+    // ========== Disease Prediction ==========
+    async function predictDisease(){
+      const symptoms = document.getElementById("symptoms").value.trim();
+      if(!symptoms){
+        showNotification('⚠️ Please enter symptoms','error');
+        return;
+      }
+
+      showNotification('⏳ Predicting disease...','info');
+      
+      try{
+        const response = await fetch(
+          `${API_BASE}/health/predict_disease?symptoms=${encodeURIComponent(symptoms)}`,
+          {method:"POST"}
+        );
+
+        if(!response.ok) throw new Error("Prediction failed");
+        const data = await response.json();
+
+        document.getElementById("predictionResult").style.display = "block";
+        document.getElementById("disease").textContent = data.predicted_disease || "N/A";
+        document.getElementById("description").textContent = data.description || "No description available.";
+        document.getElementById("workout").textContent = data.workout || "No workout available.";
+
+        // Clear and populate lists
+        const medsList = document.getElementById("medications");
+        const dietList = document.getElementById("diet");
+        const homeList = document.getElementById("homeRemedies");
+        const yogaList = document.getElementById("yogasan");
+
+        [medsList, dietList, homeList, yogaList].forEach(list => list.innerHTML = "");
+
+        (data.medications || []).forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          medsList.appendChild(li);
+        });
+
+        (data.diet || []).forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          dietList.appendChild(li);
+        });
+
+        (data.home_remedies || []).forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          homeList.appendChild(li);
+        });
+
+        (data.yogasan || []).forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          yogaList.appendChild(li);
+        });
+
+        showNotification('✅ Disease predicted!','success');
+        document.getElementById("predictionResult").scrollIntoView({behavior:'smooth',block:'nearest'});
+      }catch(err){
+        showNotification('❌ Prediction failed: '+err.message,'error');
+      }
     }
-    function appendChatMessage(t,u=false){const c=document.getElementById('chatMessages');const m=document.createElement('div');m.className='message '+(u?'user':'bot');m.textContent=t;c.appendChild(m);c.scrollTop=c.scrollHeight;}
-    function handleChatKeypress(e){if(e.key==='Enter'){e.preventDefault();sendMessage();}}
-    function handleRemedyKeypress(e){if(e.key==='Enter'){e.preventDefault();getRemedies();}}
+
+    function handlePredictionKeypress(e){
+      if(e.key==='Enter'){e.preventDefault();predictDisease();}
+    }
+
+    // ========== Chat ==========
+    async function sendMessage(){
+      const i=document.getElementById('chatInput');
+      const q=i.value.trim();
+      if(!q)return;
+      appendChatMessage(q,true);
+      i.value='';
+      appendChatMessage('⏳ Thinking...',false);
+      try{
+        const r=await fetch(`${API_BASE}/chat/ask?query=${encodeURIComponent(q)}`);
+        const d=await r.json();
+        document.querySelectorAll('.message.bot:last-child')[0]?.remove();
+        appendChatMessage(d.answer||d.error||'No response',false);
+      }catch(e){
+        document.querySelectorAll('.message.bot:last-child')[0]?.remove();
+        appendChatMessage('❌ Connection error',false);
+      }
+    }
+    
+    function appendChatMessage(t,u=false){
+      const c=document.getElementById('chatMessages');
+      const m=document.createElement('div');
+      m.className='message '+(u?'user':'bot');
+      m.textContent=t;
+      c.appendChild(m);
+      c.scrollTop=c.scrollHeight;
+    }
+    
+    function handleChatKeypress(e){
+      if(e.key==='Enter'){e.preventDefault();sendMessage();}
+    }
+
+    // ========== Home Remedies ==========
+    function handleRemedyKeypress(e){
+      if(e.key==='Enter'){e.preventDefault();getRemedies();}
+    }
+    
     async function getRemedies(){
       const d=document.getElementById('diseaseInput').value.trim();
-      if(!d){showNotification('Enter a disease','error');return;}
-      const r=await fetch(`${API_BASE}/chat/ask?query=home remedies for ${encodeURIComponent(d)}`);
-      const data=await r.json();
-      document.getElementById('remedyResults').innerHTML=`<div class='remedy-item'>${data.answer||data.error}</div>`;
+      if(!d){showNotification('⚠️ Enter a disease','error');return;}
+      showNotification('⏳ Searching remedies...','info');
+      try{
+        const r=await fetch(`${API_BASE}/chat/ask?query=home remedies for ${encodeURIComponent(d)}`);
+        const data=await r.json();
+        document.getElementById('remedyResults').innerHTML=`<div class='remedy-item'>${data.answer||data.error}</div>`;
+        showNotification('✅ Remedies found!','success');
+      }catch(e){
+        showNotification('❌ Search failed','error');
+      }
     }
 
-    // Doctor contact functions
+    // ========== Doctor Contact ==========
     function videoCall(){
       alert("📹 Starting dummy video call with Doctor...");
       showNotification("Simulating video call...","info");

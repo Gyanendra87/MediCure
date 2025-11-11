@@ -1,0 +1,146 @@
+<div class="health-container">
+  <h2 class="title">🩺 Disease Prediction Assistant</h2>
+
+  <div class="input-section">
+    <label for="symptoms" class="label">Enter Symptoms (comma separated):</label>
+    <input type="text" id="symptoms" placeholder="e.g., itching, skin rash, joint pain" class="input-box" />
+    <button id="predictBtn" class="predict-btn">Predict Disease</button>
+  </div>
+
+  <div id="result" class="result-section" style="display:none;">
+    <h3>Prediction Result</h3>
+    <p><strong>Disease:</strong> <span id="disease"></span></p>
+    <p><strong>Description:</strong> <span id="description"></span></p>
+    <p><strong>Medications:</strong></p>
+    <ul id="medications"></ul>
+    <p><strong>Diet Recommendations:</strong></p>
+    <ul id="diet"></ul>
+    <p><strong>Workout Suggestions:</strong> <span id="workout"></span></p>
+    <p><strong>Home Remedies:</strong></p>
+    <ul id="homeRemedies"></ul>
+    <p><strong>Yogasan:</strong></p>
+    <ul id="yogasan"></ul>
+  </div>
+</div>
+
+<style>
+  .health-container {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-family: 'Poppins', sans-serif;
+    margin-top: 20px;
+  }
+
+  .title {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 20px;
+  }
+
+  .input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .label {
+    font-weight: 500;
+  }
+
+  .input-box {
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+
+  .predict-btn {
+    background-color: #2ecc71;
+    border: none;
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .predict-btn:hover {
+    background-color: #27ae60;
+  }
+
+  .result-section {
+    margin-top: 25px;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 10px;
+  }
+
+  ul {
+    margin-top: 5px;
+    margin-bottom: 10px;
+    padding-left: 20px;
+  }
+</style>
+
+<script>
+  document.getElementById("predictBtn").addEventListener("click", async () => {
+    const symptoms = document.getElementById("symptoms").value.trim();
+    if (!symptoms) {
+      alert("Please enter symptoms first!");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/health/predict_disease?symptoms=${encodeURIComponent(symptoms)}`,
+        { method: "POST" }
+      );
+
+      if (!response.ok) throw new Error("Prediction failed");
+      const data = await response.json();
+
+      document.getElementById("result").style.display = "block";
+      document.getElementById("disease").innerText = data.predicted_disease || "N/A";
+      document.getElementById("description").innerText = data.description || "No description available.";
+      document.getElementById("workout").innerText = data.workout || "No workout available.";
+
+      // Lists
+      const medsList = document.getElementById("medications");
+      const dietList = document.getElementById("diet");
+      const homeList = document.getElementById("homeRemedies");
+      const yogaList = document.getElementById("yogasan");
+
+      // Clear old data
+      [medsList, dietList, homeList, yogaList].forEach(list => (list.innerHTML = ""));
+
+      (data.medications || []).forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        medsList.appendChild(li);
+      });
+
+      (data.diet || []).forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        dietList.appendChild(li);
+      });
+
+      (data.home_remedies || []).forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        homeList.appendChild(li);
+      });
+
+      (data.yogasan || []).forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        yogaList.appendChild(li);
+      });
+    } catch (err) {
+      alert("Error fetching prediction: " + err.message);
+    }
+  });
+</script>

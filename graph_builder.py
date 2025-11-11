@@ -9,7 +9,6 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if not GOOGLE_API_KEY:
     raise ValueError("❌ GOOGLE_API_KEY not found in .env file!")
 
-# Set environment variable BEFORE importing LangChain/Google Gen AI
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 # NOW import LangChain modules
@@ -20,7 +19,10 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import START, StateGraph, END
 
-# === STEP 1: Load PDF for QA ===
+# === Initialize LLM (this fixes 'llm not defined') ===
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
+
+# === STEP 1: Load PDF for QA ===
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 pdf_path = os.path.join(BASE_DIR, "medical_book.pdf")
 if not os.path.exists(pdf_path):
@@ -36,46 +38,36 @@ embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-
 db = FAISS.from_documents(docs, embeddings)
 retriever = db.as_retriever(search_kwargs={"k": 3})
 
-# === STEP 2: Initialize Gemini LLM with supported model ===
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",     # updated model name (supported) :contentReference[oaicite:0]{index=0}
-    temperature=0.3
-)
-
-# === STEP 3: Load Home Remedies CSV ===
+# === STEP 3: Load Home Remedies CSV ===
 remedies_file = os.path.join(BASE_DIR, "home_remedies.csv")
 if not os.path.exists(remedies_file):
     raise FileNotFoundError(f"❌ home_remedies.csv not found at {remedies_file}")
 
 df = pd.read_csv(remedies_file)
-df['Health Issue'] = df['Health Issue'].astype(str).str.strip().str.lower()
+df['Disease'] = df['Disease'].astype(str).str.strip().str.lower()
 df['Home Remedy'] = df['Home Remedy'].astype(str).str.strip()
 
-# === STEP 4: Function to get remedy from CSV ===
+# === STEP 4: Function to get remedy from CSV ===
 def predict_remedy(disease_name: str) -> str:
-    """Get home remedy for a given disease from CSV."""
     key = disease_name.strip().lower()
-    matched = df[df['Health Issue'] == key]
+    matched = df[df['Disease'] == key]
     if not matched.empty:
         return matched.iloc[0]['Home Remedy']
-    # fallback partial match
-    partial = df[df['Health Issue'].str.contains(key, na=False)]
+    partial = df[df['Disease'].str.contains(key, na=False)]
     if not partial.empty:
         return partial.iloc[0]['Home Remedy']
     return f"⚠️ No specific home remedy found for '{disease_name}'. Please consult a healthcare professional."
 
-# === STEP 5: Define Chat State ===
+# === STEP 5: Define Chat State ===
 class ChatState(TypedDict):
     messages: List[Dict[str, Any]]
     context: str
 
-# === STEP 6: Graph Nodes ===
+# === STEP 6: Graph Nodes ===
 def retrieve_node(state: ChatState) -> ChatState:
-    """Retrieve relevant context from medical book."""
     try:
         query = state["messages"][-1]["content"]
         docs_found = retriever.invoke(query)
-        # Some models/versions of LangChain return list of docs or other type; adjust accordingly
         context = "\n".join([d.page_content for d in docs_found])
         state["context"] = context
     except Exception as e:
@@ -84,14 +76,11 @@ def retrieve_node(state: ChatState) -> ChatState:
     return state
 
 def generate_node(state: ChatState) -> ChatState:
-    """Generate response based on query type."""
     try:
         query = state["messages"][-1]["content"].strip()
         context = state.get("context", "")
 
-        # Detect home remedy intents
         if any(k in query.lower() for k in ["remedy", "home remedy", "home remedies", "treatment for", "cure for"]):
-            # Extract disease name simply
             disease_name = query
             if "for" in query.lower():
                 disease_name = query.lower().split("for")[-1].strip()
@@ -104,7 +93,6 @@ def generate_node(state: ChatState) -> ChatState:
             })
             return state
 
-        # Default: QA over PDF content using retrieved context
         prompt = (
             f"You are a helpful medical assistant. Answer the following medical query based on the context provided.\n\n"
             f"Context from medical book:\n{context}\n\n"
@@ -113,8 +101,8 @@ def generate_node(state: ChatState) -> ChatState:
             f"say so and provide general medical knowledge if appropriate."
         )
 
+        # ✅ Use the initialized LLM here
         response = llm.invoke(prompt)
-        # The LangChain wrapper returns different attributes; adjust if necessary
         answer = response.content if hasattr(response, 'content') else str(response)
 
         state["messages"].append({
@@ -130,7 +118,7 @@ def generate_node(state: ChatState) -> ChatState:
 
     return state
 
-# === STEP 7: Build and compile LangGraph ===
+# === STEP 7: Build and compile LangGraph ===
 graph_builder = StateGraph(ChatState)
 graph_builder.add_node("retrieve", retrieve_node)
 graph_builder.add_node("generate", generate_node)
@@ -140,4 +128,4 @@ graph_builder.add_edge("generate", END)
 
 graph = graph_builder.compile()
 
-print("✅ Chatbot ready with medical_book.pdf and home_remedies.csv")
+print("✅ Chatbot ready with medical_book.pdf and home_remedies.csv (LLM fixed and loaded)")

@@ -27,6 +27,9 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+# Health router import
+from health import health_router  # <-- New health feature
+
 # ==========================
 # JWT Config
 # ==========================
@@ -81,7 +84,6 @@ def register(username: str = Query(...), password: str = Query(...), db: Session
         if db.query(User).filter(User.username == username).first():
             raise HTTPException(status_code=400, detail="Username already exists")
 
-        # Truncate password to 72 bytes for bcrypt
         hashed_password = pwd_context.hash(password[:72])
         user = User(username=username, password_hash=hashed_password)
         db.add(user)
@@ -99,7 +101,6 @@ def login(username: str = Query(...), password: str = Query(...), db: Session = 
         if not user or not pwd_context.verify(password[:72], user.password_hash):
             raise HTTPException(status_code=401, detail="Invalid username or password")
 
-        # Generate JWT token
         payload = {
             "sub": user.username,
             "exp": datetime.utcnow() + timedelta(minutes=JWT_EXP_DELTA_MINUTES)
@@ -115,7 +116,7 @@ def login(username: str = Query(...), password: str = Query(...), db: Session = 
         raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
 # ==========================
-# Chat Routes
+# Chat Routes (Home Remedies Prediction)
 # ==========================
 @chat_router.get("/ask")
 async def ask_question(query: str = Query(...)):
@@ -124,7 +125,7 @@ async def ask_question(query: str = Query(...)):
         if not query.strip():
             raise HTTPException(status_code=400, detail="Query cannot be empty")
 
-        # Home Remedies detection
+        # Detect if user asks for home remedies
         if any(keyword in query.lower() for keyword in ["remedy", "home remedy", "home remedies", "treatment for", "cure for"]):
             disease_name = query.split("for")[-1].strip() if "for" in query.lower() else query
             disease_name = disease_name.replace('"','').replace(',', '').replace('?','').strip()
@@ -151,12 +152,10 @@ async def upload_report(file: UploadFile = File(...), db: Session = Depends(get_
         if not file.filename.endswith(".pdf"):
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
-        # Save temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
             tmp_file.write(await file.read())
             tmp_path = tmp_file.name
 
-        # Load PDF
         loader = PyPDFLoader(tmp_path)
         documents = loader.load()
         if not documents:
@@ -166,7 +165,6 @@ async def upload_report(file: UploadFile = File(...), db: Session = Depends(get_
         chunks = splitter.split_documents(documents)
         report_context = "\n".join([chunk.page_content for chunk in chunks])
 
-        # Summarize with LLM
         llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.3)
         summaries = []
         for i, chunk in enumerate(chunks[:10]):
@@ -175,7 +173,6 @@ async def upload_report(file: UploadFile = File(...), db: Session = Depends(get_
             summaries.append(response.content if hasattr(response, 'content') else str(response))
         summary_text = " ".join(summaries)
 
-        # Save to DB
         report_record = Report(file_name=file.filename, pdf_text=summary_text)
         db.add(report_record)
         db.commit()
@@ -195,6 +192,7 @@ async def upload_report(file: UploadFile = File(...), db: Session = Depends(get_
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(report_router)
+app.include_router(health_router)  # <-- Include health routes
 
 # ==========================
 # Health Check
@@ -207,7 +205,8 @@ def root():
             "chat": "/chat/ask?query=your_question",
             "upload": "/report/upload",
             "register": "/auth/register",
-            "login": "/auth/login"
+            "login": "/auth/login",
+            "health": "/health/predict?symptoms=your_symptoms"
         }
     }
 
