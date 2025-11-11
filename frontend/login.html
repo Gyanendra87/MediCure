@@ -1,69 +1,473 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Login / Register | MediCure AI</title>
-<style>
-  body { font-family: Arial,sans-serif; background: linear-gradient(135deg,#0078d4,#00c6ff); display:flex; justify-content:center; align-items:center; height:100vh; }
-  .container { background:white; border-radius:15px; padding:30px; width:400px; text-align:center; box-shadow:0 8px 16px rgba(0,0,0,0.2); }
-  h2 { color:#0078d4; margin-bottom:20px; }
-  input { width:90%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; }
-  button { background:#0078d4; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin:10px 5px; }
-  button:hover { background:#005fa3; }
-  .toggle { color:#0078d4; cursor:pointer; text-decoration:underline; }
-  #message { margin-top:10px; color:red; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCure AI - Login/Register</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background circles */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        body::before {
+            width: 400px;
+            height: 400px;
+            top: -100px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        body::after {
+            width: 300px;
+            height: 300px;
+            bottom: -50px;
+            left: -50px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(180deg); }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 50px 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        h2 {
+            color: #333;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            color: #999;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        input[type=text], input[type=password] {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type=text]:focus, input[type=password]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        input[type=text]:focus + label,
+        input[type=text]:not(:placeholder-shown) + label,
+        input[type=password]:focus + label,
+        input[type=password]:not(:placeholder-shown) + label {
+            top: -10px;
+            left: 10px;
+            font-size: 12px;
+            color: #667eea;
+            background: white;
+            padding: 0 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        button.login {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        button.login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        button.register {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button.register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 14px;
+            word-wrap: break-word;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+
+        .message.success {
+            background: #efe;
+            color: #2d8;
+            border: 1px solid #cfc;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loader {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .features {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .feature {
+            text-align: center;
+            flex: 1;
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .feature-text {
+            font-size: 12px;
+            color: #666;
+        }
+
+        @media (max-width: 500px) {
+            .container {
+                padding: 40px 30px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .features {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="container" id="auth-box">
-  <h2 id="form-title">Login</h2>
-  <input type="text" id="username" placeholder="Username" />
-  <input type="password" id="password" placeholder="Password" />
-  <div>
-    <button id="auth-btn" onclick="submitForm()">Login</button>
-    <p id="toggle-text">New user? <span class="toggle" onclick="toggleForm()">Register here</span></p>
-  </div>
-  <div id="message"></div>
-</div>
+    <div class="container">
+        <div class="logo">
+            <div class="logo-icon">🏥</div>
+            <h2>MediCure AI</h2>
+            <p class="subtitle">Your Intelligent Health Assistant</p>
+        </div>
 
-<script>
-let isRegister = false;
-function toggleForm(){
-  isRegister=!isRegister;
-  document.getElementById("form-title").textContent=isRegister?"Register":"Login";
-  document.getElementById("auth-btn").textContent=isRegister?"Register":"Login";
-  document.getElementById("toggle-text").innerHTML=isRegister?
-    'Already have an account? <span class="toggle" onclick="toggleForm()">Login here</span>':
-    'New user? <span class="toggle" onclick="toggleForm()">Register here</span>';
-  document.getElementById("message").textContent="";
-}
+        <div class="input-group">
+            <input type="text" id="username" placeholder=" " required>
+            <label>Username</label>
+        </div>
 
-async function submitForm(){
-  const username=document.getElementById("username").value.trim();
-  const password=document.getElementById("password").value.trim();
-  const messageBox=document.getElementById("message");
-  if(!username||!password){messageBox.textContent="Enter both fields."; return;}
-  const endpoint=isRegister?"register":"login";
-  const url=`http://127.0.0.1:8000/auth/${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-  try{
-    const response=await fetch(url,{method:"POST"});
-    const data=await response.json();
-    if(response.ok){
-      if(isRegister){
-        messageBox.style.color="green";
-        messageBox.textContent=`✅ ${data.message}. Login now.`;
-        toggleForm();
-      } else {
-        window.location.href="index.html";
-      }
-    } else {
-      messageBox.style.color="red"; messageBox.textContent=data.detail||"Server error.";
-    }
-  } catch(e){
-    messageBox.style.color="red"; messageBox.textContent="Server error. Try again.";
-  }
-}
-</script>
+        <div class="input-group">
+            <input type="password" id="password" placeholder=" " required>
+            <label>Password</label>
+        </div>
+
+        <div class="button-group">
+            <button class="login" id="loginBtn">
+                <span>Login</span>
+            </button>
+            <button class="register" id="registerBtn">
+                <span>Register</span>
+            </button>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-text">AI-Powered</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <div class="feature-text">Report Analysis</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🌿</div>
+                <div class="feature-text">Home Remedies</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loginBtn = document.getElementById("loginBtn");
+        const registerBtn = document.getElementById("registerBtn");
+        const messageDiv = document.getElementById("message");
+        const baseURL = "http://127.0.0.1:8000/auth";
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message show ${type}`;
+        }
+
+        function hideMessage() {
+            messageDiv.className = "message";
+        }
+
+        function setLoading(button, isLoading) {
+            const span = button.querySelector('span');
+            if (isLoading) {
+                button.disabled = true;
+                const loader = document.createElement('span');
+                loader.className = 'loader';
+                loader.id = 'loader-' + button.className;
+                button.appendChild(loader);
+            } else {
+                button.disabled = false;
+                const loader = button.querySelector('.loader');
+                if (loader) loader.remove();
+            }
+        }
+
+        async function callAPI(endpoint, username, password) {
+            try {
+                const response = await fetch(`${baseURL}/${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+                    method: "POST"
+                });
+                const data = await response.json();
+                return { ok: response.ok, data };
+            } catch (err) {
+                return { ok: false, data: { detail: "Cannot connect to server. Please check if the server is running." } };
+            }
+        }
+
+        loginBtn.addEventListener("click", async () => {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+            
+            if (!username || !password) {
+                showMessage("⚠️ Please enter both username and password", "error");
+                return;
+            }
+
+            hideMessage();
+            setLoading(loginBtn, true);
+
+            const { ok, data } = await callAPI("login", username, password);
+            
+            setLoading(loginBtn, false);
+
+            if (ok) {
+                if (data.access_token) {
+                    localStorage.setItem("access_token", data.access_token);
+                }
+                showMessage("✅ " + (data.message || "Login successful! Redirecting..."), "success");
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 1500);
+            } else {
+                showMessage("❌ " + (data.detail || "Login failed"), "error");
+            }
+        });
+
+        registerBtn.addEventListener("click", async () => {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+            
+            if (!username || !password) {
+                showMessage("⚠️ Please enter both username and password", "error");
+                return;
+            }
+
+            if (password.length < 4) {
+                showMessage("⚠️ Password must be at least 4 characters", "error");
+                return;
+            }
+
+            hideMessage();
+            setLoading(registerBtn, true);
+
+            const { ok, data } = await callAPI("register", username, password);
+            
+            setLoading(registerBtn, false);
+
+            if (ok) {
+                showMessage("✅ " + (data.message || "Registration successful") + " You can now login.", "success");
+            } else {
+                showMessage("❌ " + (data.detail || "Registration failed"), "error");
+            }
+        });
+
+        // Allow Enter key to login
+        document.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                loginBtn.click();
+            }
+        });
+    </script>
 </body>
 </html>

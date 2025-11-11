@@ -1,40 +1,39 @@
-from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey, DateTime
+# database.py
+import os
+from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from datetime import datetime
-from passlib.context import CryptContext
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 
-Base = declarative_base()
+load_dotenv()
 
-# Use pbkdf2_sha256 instead of bcrypt to avoid 72-byte limit
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+# SQLite DB URL (default)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./medicure.db")
 
-# SQLite URL
-DATABASE_URL = "sqlite:///./chatbot.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
-# ------------------ Models ------------------ #
+# ======================
+# Models
+# ======================
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    password_hash = Column(String)
-    reports = relationship("Report", back_populates="owner")
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    password_hash = Column(String(128), nullable=False)
 
-    def verify_password(self, password: str):
-        return pwd_context.verify(password, self.password_hash)
 
 class Report(Base):
     __tablename__ = "reports"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    file_name = Column(String)
-    pdf_text = Column(Text)
-    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    file_name = Column(String(255), nullable=False)
+    pdf_text = Column(Text, nullable=True)
 
-    owner = relationship("User", back_populates="reports")
 
-# ------------------ Create Tables ------------------ #
+# ======================
+# Initialize DB
+# ======================
 def init_db():
     Base.metadata.create_all(bind=engine)
