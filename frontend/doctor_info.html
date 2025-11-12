@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCure AI - Doctor Info</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007bff;
+        }
+
+        .filter-box, .doctor-list, .profile-box, .book-box, .add-box {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 700px;
+        }
+
+        input, button, select {
+            padding: 8px 10px;
+            margin: 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .doctor-card {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+
+        .doctor-card:last-child {
+            border-bottom: none;
+        }
+
+        .doctor-card h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+            background-color: #e6ffe6;
+            border: 1px solid #6ac46a;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            background-color: #ffe6e6;
+            border: 1px solid #f5a3a3;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .profile {
+            background: #eef6ff;
+            padding: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🩺 Doctor Information Portal</h1>
+
+    <!-- Filter doctors -->
+    <div class="filter-box">
+        <h2>🔍 Search Doctors (via JustDial)</h2>
+        <input type="text" id="city" placeholder="Enter City (e.g. Mumbai)">
+        <input type="text" id="specialization" placeholder="Enter Specialization (e.g. Cardiologist)">
+        <button onclick="fetchDoctors()">Search</button>
+        <div id="doctorList" class="doctor-list"></div>
+    </div>
+
+    <!-- Doctor Profile -->
+    <div class="profile-box">
+        <h2>👨‍⚕️ Doctor Profile</h2>
+        <input type="number" id="doctorId" placeholder="Enter Doctor ID">
+        <button onclick="getProfile()">Get Profile</button>
+        <div id="profileResult" class="profile"></div>
+    </div>
+
+    <!-- Book Appointment -->
+    <div class="book-box">
+        <h2>📅 Book Appointment</h2>
+        <input type="number" id="bookDoctorId" placeholder="Doctor ID">
+        <input type="text" id="patientName" placeholder="Patient Name">
+        <button onclick="bookAppointment()">Book Appointment</button>
+        <div id="bookMsg"></div>
+    </div>
+
+    <!-- Add Dummy Doctors -->
+    <div class="add-box">
+        <h2>⚙️ Add Dummy Doctors</h2>
+        <button onclick="addDummy()">Add Dummy Data</button>
+        <div id="addMsg"></div>
+    </div>
+
+    <script>
+        const baseUrl = "http://127.0.0.1:8000";
+
+        // Fetch doctors from JustDial
+        async function fetchDoctors() {
+            const city = document.getElementById('city').value;
+            const specialization = document.getElementById('specialization').value;
+            const url = `${baseUrl}/doctor/fetch_from_justdial?city=${city}&specialization=${specialization}`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            const container = document.getElementById('doctorList');
+            container.innerHTML = "";
+
+            if (!data.doctors || data.doctors.length === 0) {
+                container.innerHTML = "<p>No doctors found.</p>";
+                return;
+            }
+
+            data.doctors.forEach(d => {
+                container.innerHTML += `
+                    <div class="doctor-card">
+                        <h3>${d.name}</h3>
+                        <p><b>Address:</b> ${d.address}</p>
+                        <p><b>Rating:</b> ${d.rating}</p>
+                        <p><b>Contact:</b> ${d.contact}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Get doctor profile
+        async function getProfile() {
+            const id = document.getElementById('doctorId').value;
+            if (!id) return alert("Please enter Doctor ID");
+
+            const res = await fetch(`${baseUrl}/doctor/profile/${id}`);
+            const data = await res.json();
+
+            if (data.detail) {
+                document.getElementById('profileResult').innerHTML = `<p class='error'>❌ ${data.detail}</p>`;
+                return;
+            }
+
+            document.getElementById('profileResult').innerHTML = `
+                <p><b>Name:</b> ${data.name}</p>
+                <p><b>Specialization:</b> ${data.specialization}</p>
+                <p><b>City:</b> ${data.city}</p>
+                <p><b>Bio:</b> ${data.bio}</p>
+                <p><b>Available Slots:</b> ${data.available_slots}</p>
+                <p><b>Booked Today:</b> ${data.booked_today}</p>
+            `;
+        }
+
+        // Book appointment (persistent success message)
+        async function bookAppointment() {
+            const doctorId = document.getElementById('bookDoctorId').value;
+            const patientName = document.getElementById('patientName').value;
+            const msgBox = document.getElementById('bookMsg');
+            msgBox.innerHTML = "";
+
+            if (!doctorId || !patientName) {
+                msgBox.innerHTML = `<p class='error'>⚠ Please enter both Doctor ID and Patient Name.</p>`;
+                return;
+            }
+
+            try {
+                const res = await fetch(`${baseUrl}/doctor/book?doctor_id=${doctorId}&patient_name=${encodeURIComponent(patientName)}`, {
+                    method: "POST"
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    msgBox.innerHTML = `<p class='success'>✅ Appointment booked successfully for <b>${patientName}</b> with Doctor ID <b>${doctorId}</b>.</p>`;
+                    msgBox.scrollIntoView({ behavior: "smooth" });
+
+                    const viewedId = document.getElementById('doctorId').value;
+                    if (viewedId && viewedId == doctorId) {
+                        getProfile();
+                    }
+                } else {
+                    msgBox.innerHTML = `<p class='error'>❌ ${data.detail || "Booking failed. Please try again."}</p>`;
+                    msgBox.scrollIntoView({ behavior: "smooth" });
+                }
+            } catch (error) {
+                msgBox.innerHTML = `<p class='error'>⚠ Error: ${error.message}</p>`;
+                msgBox.scrollIntoView({ behavior: "smooth" });
+            }
+        }
+
+        // Add dummy doctors
+        async function addDummy() {
+            const msgBox = document.getElementById('addMsg');
+            msgBox.innerHTML = "⏳ Adding dummy data...";
+            const res = await fetch(`${baseUrl}/doctor/add_dummy`, { method: "POST" });
+            const data = await res.json();
+            msgBox.innerHTML = `<p class='success'>✅ ${data.message}</p>`;
+        }
+    </script>
+</body>
+</html>

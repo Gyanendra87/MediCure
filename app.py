@@ -1,25 +1,15 @@
 import os
 import tempfile
 from dotenv import load_dotenv
-
-# === Load .env first ===
-load_dotenv()
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY not found in .env!")
-
-os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
-
-# ==========================
-# Imports
-# ==========================
 from fastapi import FastAPI, APIRouter, Query, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from database import SessionLocal, init_db, User, Report
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
+
+# Database and models
+from database import SessionLocal, init_db, User, Report
 
 # Chatbot imports
 from graph_builder import graph, predict_remedy
@@ -27,19 +17,26 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-# Health router import
-from health import health_router  # <-- New health feature
+# Routers
+from health import health_router
+from doctor import doctor_router
 
 # ==========================
-# JWT Config
+# ENV SETUP
 # ==========================
+load_dotenv()
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+if not GOOGLE_API_KEY:
+    raise ValueError("GOOGLE_API_KEY not found in .env!")
+
+os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+
+# JWT config
 JWT_SECRET = os.getenv("JWT_SECRET", "mysupersecretkey")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXP_DELTA_MINUTES = int(os.getenv("JWT_EXP_DELTA_MINUTES", 60))
 
-# ==========================
 # FastAPI setup
-# ==========================
 app = FastAPI(title="MediCure AI Chatbot")
 app.add_middleware(
     CORSMiddleware,
@@ -68,9 +65,7 @@ def get_db():
     finally:
         db.close()
 
-# ==========================
-# Routers
-# ==========================
+# Routers setup
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 chat_router = APIRouter(prefix="/chat", tags=["Chat"])
 report_router = APIRouter(prefix="/report", tags=["Report"])
@@ -80,66 +75,50 @@ report_router = APIRouter(prefix="/report", tags=["Report"])
 # ==========================
 @auth_router.post("/register")
 def register(username: str = Query(...), password: str = Query(...), db: Session = Depends(get_db)):
-    try:
-        if db.query(User).filter(User.username == username).first():
-            raise HTTPException(status_code=400, detail="Username already exists")
+    if db.query(User).filter(User.username == username).first():
+        raise HTTPException(status_code=400, detail="Username already exists")
 
-        hashed_password = pwd_context.hash(password[:72])
-        user = User(username=username, password_hash=hashed_password)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return {"message": f"User {username} registered successfully"}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+    hashed_password = pwd_context.hash(password[:72])
+    user = User(username=username, password_hash=hashed_password)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {"message": f"User {username} registered successfully"}
+
 
 @auth_router.post("/login")
 def login(username: str = Query(...), password: str = Query(...), db: Session = Depends(get_db)):
-    try:
-        user = db.query(User).filter(User.username == username).first()
-        if not user or not pwd_context.verify(password[:72], user.password_hash):
-            raise HTTPException(status_code=401, detail="Invalid username or password")
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not pwd_context.verify(password[:72], user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
 
-        payload = {
-            "sub": user.username,
-            "exp": datetime.utcnow() + timedelta(minutes=JWT_EXP_DELTA_MINUTES)
-        }
-        token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    payload = {"sub": user.username, "exp": datetime.utcnow() + timedelta(minutes=JWT_EXP_DELTA_MINUTES)}
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-        return {
-            "message": f"Welcome {username}! You are now logged in.",
-            "access_token": token,
-            "token_type": "bearer"
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
+    return {"message": f"Welcome {username}! You are now logged in.", "access_token": token, "token_type": "bearer"}
 
 # ==========================
-# Chat Routes (Home Remedies Prediction)
+# Chat Routes
 # ==========================
 @chat_router.get("/ask")
 async def ask_question(query: str = Query(...)):
     global report_context
-    try:
-        if not query.strip():
-            raise HTTPException(status_code=400, detail="Query cannot be empty")
+    if not query.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
 
-        # Detect if user asks for home remedies
-        if any(keyword in query.lower() for keyword in ["remedy", "home remedy", "home remedies", "treatment for", "cure for"]):
-            disease_name = query.split("for")[-1].strip() if "for" in query.lower() else query
-            disease_name = disease_name.replace('"','').replace(',', '').replace('?','').strip()
-            remedy = predict_remedy(disease_name)
-            return {"answer": f"🌿 Home Remedy for {disease_name.title()}:\n\n{remedy}"}
+    # Detect home remedies
+    if any(keyword in query.lower() for keyword in ["remedy", "home remedy", "treatment for", "cure for"]):
+        disease_name = query.split("for")[-1].strip() if "for" in query.lower() else query
+        disease_name = disease_name.replace('"', '').replace(',', '').replace('?', '').strip()
+        remedy = predict_remedy(disease_name)
+        return {"answer": f"🌿 Home Remedy for {disease_name.title()}:\n\n{remedy}"}
 
-        # Default QA via LangGraph
-        state = {"messages": [{"role": "user", "content": query}], "context": report_context}
-        result = graph.invoke(state)
-        answer = result["messages"][-1].get("content", "No response") if result.get("messages") else "No response"
-        return {"answer": answer}
+    # Default QA via LangGraph
+    state = {"messages": [{"role": "user", "content": query}], "context": report_context}
+    result = graph.invoke(state)
+    answer = result["messages"][-1].get("content", "No response") if result.get("messages") else "No response"
+    return {"answer": answer}
 
-    except Exception as e:
-        return {"error": str(e)}
 
 # ==========================
 # Report Upload
@@ -178,13 +157,10 @@ async def upload_report(file: UploadFile = File(...), db: Session = Depends(get_
         db.commit()
 
         return {"summary": summary_text}
-
-    except Exception as e:
-        db.rollback()
-        return {"error": str(e)}
     finally:
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
+
 
 # ==========================
 # Include Routers
@@ -192,10 +168,11 @@ async def upload_report(file: UploadFile = File(...), db: Session = Depends(get_
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(report_router)
-app.include_router(health_router)  # <-- Include health routes
+app.include_router(health_router)
+app.include_router(doctor_router)
 
 # ==========================
-# Health Check
+# Root Endpoint
 # ==========================
 @app.get("/")
 def root():
@@ -206,9 +183,11 @@ def root():
             "upload": "/report/upload",
             "register": "/auth/register",
             "login": "/auth/login",
-            "health": "/health/predict?symptoms=your_symptoms"
+            "health": "/health/predict?symptoms=your_symptoms",
+            "doctor": "/doctor/list?city=Delhi"
         }
     }
+
 
 # ==========================
 # Run
