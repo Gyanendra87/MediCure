@@ -6,7 +6,7 @@ passlib[bcrypt]
 python-jose
 pypdf
 PyMuPDF
-langchain>=1.0.0
+langchain==0.0.350
 
 langchain-community
 langchain-huggingface

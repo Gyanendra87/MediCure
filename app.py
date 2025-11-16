@@ -20,7 +20,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Routers
 from health import health_router
-from doctor import doctor_router
+# doctor router removed
 
 
 # ==========================
@@ -183,7 +183,7 @@ app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(report_router)
 app.include_router(health_router)
-app.include_router(doctor_router)
+# doctor router removed
 
 
 # ==========================
