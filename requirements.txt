@@ -1,5 +1,11 @@
 fastapi
 uvicorn
+python-dotenv
+sqlalchemy
+passlib[bcrypt]
+python-jose
+pypdf
+PyMuPDF
 langchain
 langchain-community
 langchain-huggingface
@@ -9,3 +15,5 @@ huggingface-hub
 google-generativeai
 sentence-transformers
 faiss-cpu
+bcrypt
+pyjwt

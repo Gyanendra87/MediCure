@@ -1,222 +1,193 @@
-# 🩺 MediCure – AI-Powered Medical Chatbot
+# MediCure 🏥
 
-MediCure is an intelligent medical assistant that combines **Generative AI (Google Gemini)**, **Machine Learning (XGBoost)**, and **Natural Language Processing** to answer health-related questions and suggest **home remedies** for common conditions.
+An advanced AI-powered healthcare assistant platform that combines cutting-edge machine learning with real-time communication features to provide comprehensive medical assistance and doctor-patient connectivity.
 
----
+## 🌟 Overview
 
-## 🚀 Features
+MediCure is a full-stack healthcare solution that leverages artificial intelligence to provide medical guidance, disease detection, and direct communication with healthcare professionals. The platform integrates multiple AI models and real-time communication features to create a seamless healthcare experience.
 
-- 💬 **Medical Question Answering** using Google's Gemini API and medical knowledge base
-- 🌿 **Home Remedies Prediction** using a trained ML model (TF-IDF + XGBoost)
-- 📚 **Knowledge Base Retrieval** via FAISS vector database
-- 🧠 **Hybrid Intelligence**: Combines rule-based retrieval + AI reasoning
-- ⚡ **FastAPI Backend** ready for deployment
-- 🎯 **LangGraph Workflow** for intelligent query routing
+## ✨ Key Features
 
----
+### 🤖 AI-Powered Medical Assistant
 
-## 🧩 Tech Stack
+- **RAG-Based Medical Chat**: Intelligent conversational AI that provides accurate medical information using Retrieval-Augmented Generation
+- **Medical Report Understanding**: Automated analysis and interpretation of medical reports and lab results
+- **Symptom Analysis**: Comprehensive health assessment based on user-reported symptoms
+- **Personalized Recommendations**:
+  - Medicine suggestions tailored to specific conditions
+  - Custom diet plans based on health requirements
+  - Workout routines adapted to individual health status
 
-| Category | Tools / Libraries |
-|----------|------------------|
-| **Language** | Python 3.8+ |
-| **AI Model** | Google Gemini 2.5 Flash (via `langchain-google-genai`) |
-| **Embeddings** | `sentence-transformers/all-MiniLM-L6-v2` |
-| **Vector Store** | FAISS |
-| **ML Model** | XGBoost + TF-IDF Vectorizer |
-| **Framework** | LangChain, LangGraph |
-| **Data Sources** | `medical.txt`, `home_remedies.csv` |
-| **Backend** | FastAPI (assumed from your setup) |
-| **Environment** | `.env` for API keys |
+### 🔬 Advanced Disease Detection
 
----
+- **X-Ray Analysis**: Deep learning model for detecting diseases from X-ray images
+- **Visual Marking**: Automatic highlighting of affected areas in medical images
+- **Detailed Explanations**: AI-generated descriptions of detected conditions and their implications
 
-## 🧠 How It Works
+### 🏡 Home Healthcare
 
-1. **Load Environment Variables**  
-   Loads your `GOOGLE_API_KEY` from `.env` file
+- **Home Remedy Predictions**: Evidence-based natural remedies and home treatments for common ailments
+- **Preventive Care Tips**: Proactive health maintenance suggestions
 
-2. **Document Loading & Splitting**  
-   Loads `medical.txt` and splits into chunks for efficient retrieval
+### 💬 Real-Time Doctor Connectivity
 
-3. **Create FAISS Vector Database**  
-   Stores medical text embeddings for semantic search
+- **Text Chat**: Instant messaging with healthcare professionals
+- **Audio Calls**: High-quality voice communication with doctors
+- **Video Consultations**: Face-to-face virtual appointments for comprehensive consultations
 
-4. **Train Home Remedy Model**  
-   Uses `home_remedies.csv` to train a TF-IDF + XGBoost classifier for remedy prediction
+### 🔐 Security & Authentication
 
-5. **LangGraph Chat Flow**  
-   Implements a two-node graph:
-   - **retrieve**: Fetches relevant medical context
-   - **generate**: Uses Gemini or the remedy predictor based on query type
+- Secure user authentication system
+- Protected patient data and medical records
+- HIPAA-compliant data handling practices
 
----
+## 🛠️ Technology Stack
 
-## 🧰 Installation
+### Backend
+
+- **FastAPI**: High-performance Python web framework
+- **Deep Learning Models**: TensorFlow/PyTorch for medical image analysis
+- **RAG Pipeline**: Vector databases and LLM integration for intelligent responses
+- **WebRTC**: Real-time audio and video communication
+
+### Frontend
+
+- **HTML5**: Semantic markup for accessibility
+- **CSS3**: Modern, responsive design
+- **JavaScript**: Interactive user interface and real-time features
+
+### AI/ML Components
+
+- Computer Vision for X-ray analysis
+- Natural Language Processing for chat interactions
+- Recommendation systems for personalized health plans
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.8 or higher
-- pip package manager
-- Google API key for Gemini
 
-### Setup Steps
-
-1. **Clone the repository**
 ```bash
-git clone https://github.com/Gyanendra87/MediCure.git
-cd MediCure
+Python 3.8+
+Node.js (for frontend tooling)
+GPU support (recommended for ML models)
 ```
 
-2. **Install dependencies**
+### Installation
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/yourusername/medicure.git
+cd medicure
+```
+
+2. Install backend dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Create `.env` file**  
-Create a `.env` file in the root directory:
-```env
-GOOGLE_API_KEY=your_google_api_key_here
-```
+3. Set up environment variables
 
----
-
-## ▶️ Running the Project
-
-### Start the backend server:
 ```bash
-uvicorn app:app --reload
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-The server will start at `http://127.0.0.1:8000`
+4. Run the FastAPI server
 
-### Access the frontend:
-Open `frontend/index.html` in your browser or navigate to the appropriate endpoint.
+```bash
+uvicorn main:app --reload
+```
 
----
+5. Access the application
 
-## 🧩 Project Structure
+```
+Open your browser and navigate to http://localhost:8000
+```
+
+## 📋 Usage
+
+### For Patients
+
+1. **Sign Up/Login**: Create an account or log in securely
+2. **Chat with AI**: Describe your symptoms and get instant guidance
+3. **Upload Reports**: Share medical reports for AI analysis
+4. **Get Recommendations**: Receive personalized medicine, diet, and workout plans
+5. **X-Ray Analysis**: Upload X-ray images for disease detection
+6. **Connect with Doctors**: Schedule and conduct real-time consultations
+
+### For Healthcare Providers
+
+1. **Professional Dashboard**: Manage patient consultations
+2. **Real-Time Communication**: Respond to patient queries via chat, audio, or video
+3. **Access Patient History**: Review AI-generated insights and reports
+
+## 🏗️ Architecture
 
 ```
 MediCure/
-│
-├── app.py                      # FastAPI backend server
-├── graph_builder.py            # LangGraph workflow definition
-├── check.py                    # Utility functions
-│
-├── data/
-│   └── medical.txt             # Medical knowledge base
-│
-├── home_remedies.csv           # Home remedies dataset
-├── medical_book.pdf            # Additional medical reference
-│
+├── backend/
+│   ├── api/
+│   │   ├── routes/
+│   │   ├── models/
+│   │   └── services/
+│   ├── ml_models/
+│   │   ├── xray_detection/
+│   │   ├── rag_system/
+│   │   └── recommendation_engine/
+│   └── utils/
 ├── frontend/
-│   └── index.html              # Simple web interface
-│
-├── requirements.txt            # Python dependencies
-├── .env                        # Environment variables (not committed)
-└── README.md                   # This file
+│   ├── css/
+│   ├── js/
+│   ├── assets/
+│   └── index.html
+├── requirements.txt
+└── README.md
 ```
 
----
+## 🔮 Future Enhancements
 
-## 🧪 Example Queries
-
-### Home Remedy Request
-**User:** "What is a home remedy for indigestion?"  
-**Bot:** 🌿 Home Remedy for Indigestion: Use ginger — helps soothe the stomach and improve digestion.
-
-### Medical Question
-**User:** "Explain what causes ear infections."  
-**Bot:** 💬 Ear infections are often caused by bacteria or viruses in the middle ear, commonly following a cold or respiratory infection...
-
-### Symptom-based Query
-**User:** "I have a headache and fever"  
-**Bot:** Provides relevant medical information and suggests appropriate remedies.
-
----
-
-## 📦 Dependencies
-
-Key libraries used in this project:
-
-- `fastapi` - Web framework
-- `langchain` - LLM orchestration
-- `langchain-google-genai` - Google Gemini integration
-- `langchain-huggingface` - Embeddings
-- `langgraph` - Graph-based workflow
-- `faiss-cpu` - Vector similarity search
-- `xgboost` - Machine learning
-- `scikit-learn` - ML preprocessing
-- `pandas` - Data manipulation
-- `python-dotenv` - Environment management
-
----
-
-## 🔑 API Keys
-
-You'll need a Google API key to use Gemini:
-
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create or select a project
-3. Generate an API key
-4. Add it to your `.env` file
-
----
-
-## 📈 Future Enhancements
-
-- 🧬 Add symptom-based disease prediction
-- 🔊 Voice-based query support
-- 📱 Mobile app integration
-- 🩹 Integration with wearable sensors
-- 🌍 Multi-language support
-- 📊 User health tracking dashboard
-- 🔒 Enhanced privacy and data security
-
----
+- [ ] Mobile application (iOS & Android)
+- [ ] Integration with wearable devices
+- [ ] Multi-language support
+- [ ] Prescription management system
+- [ ] Insurance claim assistance
+- [ ] Appointment scheduling with calendar integration
+- [ ] Electronic Health Records (EHR) integration
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
+1. Fork the project
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
----
+## 📄 License
 
-## 👨‍💻 Author
-
-**Gyanendra Singh**  
-📘 B.Tech in Electronics & Communication Engineering, IIIT Una  
-🔗 [GitHub Profile](https://github.com/Gyanendra87)
-
----
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## ⚠️ Disclaimer
 
-**Important:** This chatbot is designed for **educational and informational purposes only**.
+MediCure is designed to assist with medical information and facilitate doctor-patient communication. It is **not a substitute for professional medical advice, diagnosis, or treatment**. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.
 
-- It does **NOT** replace professional medical advice, diagnosis, or treatment
-- Always consult a qualified healthcare provider for medical concerns
-- In case of emergency, contact your local emergency services immediately
+## 📧 Contact
 
----
+For questions or support, please contact:
 
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
+- **Email**: support@medicure.com
+- **Website**: https://medicure.com
+- **GitHub Issues**: [Create an issue](https://github.com/yourusername/medicure/issues)
 
 ## 🙏 Acknowledgments
 
-- Google Gemini for powerful AI capabilities
-- LangChain community for excellent tools
-- Open-source contributors of all used libraries
+- Medical datasets and research papers that made this project possible
+- Open-source AI/ML communities
+- Healthcare professionals who provided guidance and feedback
 
 ---
 
-**Made with ❤️ by Gyanendra Singh**
+**Made with ❤️ for better healthcare accessibility**
