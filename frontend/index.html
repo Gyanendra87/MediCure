@@ -751,7 +751,8 @@
     </div>
 
     <script>
-      const API_BASE = "http://127.0.0.1:8000";
+      // Use relative paths for Hugging Face Spaces
+      const API_BASE = "";
 
       function showNotification(text, type = "info") {
         const n = document.createElement("div");
@@ -788,7 +789,7 @@
         const form = new FormData();
         form.append("file", file);
         try {
-          const r = await fetch(`${API_BASE}/report/upload`, {
+          const r = await fetch(`/report/upload`, {
             method: "POST",
             body: form,
           });
@@ -816,7 +817,7 @@
 
         try {
           const response = await fetch(
-            `${API_BASE}/health/predict_disease?symptoms=${encodeURIComponent(
+            `/health/predict_disease?symptoms=${encodeURIComponent(
               symptoms
             )}`,
             { method: "POST" }
@@ -893,7 +894,7 @@
         appendChatMessage("⏳ Thinking...", false);
         try {
           const r = await fetch(
-            `${API_BASE}/chat/ask?query=${encodeURIComponent(q)}`
+            `/chat/ask?query=${encodeURIComponent(q)}`
           );
           const d = await r.json();
           document.querySelectorAll(".message.bot:last-child")[0]?.remove();
@@ -937,7 +938,7 @@
         showNotification("⏳ Searching remedies...", "info");
         try {
           const r = await fetch(
-            `${API_BASE}/chat/ask?query=home remedies for ${encodeURIComponent(
+            `/chat/ask?query=home remedies for ${encodeURIComponent(
               d
             )}`
           );

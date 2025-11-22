@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consult Doctor - MediCure AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding-top: 70px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        nav {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            padding: 12px 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            color: #667eea;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            white-space: nowrap;
+            min-width: fit-content;
+            flex-shrink: 0;
+        }
+
+        .logo svg {
+            width: 28px;
+            height: 28px;
+            filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+            flex: 1;
+            justify-content: flex-end;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::before {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: #e0e7ff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 30px;
+            flex: 1;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .doctor-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            color: #000;
+            animation: fadeInUp 0.6s ease forwards;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .doctor-card:nth-child(1) { animation-delay: 0.1s; }
+        .doctor-card:nth-child(2) { animation-delay: 0.2s; }
+        .doctor-card:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .doctor-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .doctor-card h2 {
+            color: #1a1a2e;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .doctor-card p {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+
+        .contact-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 14px 35px;
+            border: none;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 15px;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            h1 { font-size: 2.2rem; margin-bottom: 40px; }
+            .doctor-card { padding: 30px; }
+            .doctors-grid { gap: 20px; }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="main.html" class="logo">
+                <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="15" y="30" width="70" height="55" rx="8" fill="url(#grad1)" stroke="#667eea" stroke-width="2"/>
+                    <rect x="25" y="15" width="50" height="20" rx="6" fill="url(#grad2)" stroke="#764ba2" stroke-width="2"/>
+                    <circle cx="50" cy="20" r="4" fill="#f093fb"/>
+                    <path d="M45 50 L55 50 M50 45 L50 55" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                    <rect x="30" y="60" width="12" height="15" rx="2" fill="#f093fb" opacity="0.8"/>
+                    <rect x="58" y="60" width="12" height="15" rx="2" fill="#667eea" opacity="0.8"/>
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#764ba2;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                MediCure AI
+            </a>
+            <ul class="nav-links">
+                <li><a href="main.html">Home</a></li>
+                <li><a href="uploadreport.html">Upload PDF</a></li>
+                <li><a href="diseases.html">Disease Prediction</a></li>
+                <li><a href="remedies.html">Home Remedies</a></li>
+                <li><a href="chatbot.html">Medical Chat</a></li>
+                <li><a href="doctor.html">Consult Doctor</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>👨‍⚕️ Consult a Doctor</h1>
+
+        <div class="doctors-grid">
+            <div class="doctor-card">
+                <h2>☎️ Phone Consultation</h2>
+                <p>Talk to a certified doctor over a direct phone call for immediate medical guidance and personalized advice.</p>
+                <a class="contact-btn" onclick="showDemoAlert('Phone Call')">Call Now</a>
+            </div>
+
+            <div class="doctor-card">
+                <h2>💬 WhatsApp Consultation</h2>
+                <p>Chat with a doctor on WhatsApp and easily share your medical reports and health concerns.</p>
+                <a class="contact-btn" href="https://wa.me/911234567890">Open WhatsApp</a>
+            </div>
+
+            <div class="doctor-card">
+                <h2>🎥 Video Consultation</h2>
+                <p>Get detailed medical advice via video call with a specialist from the comfort of your home.</p>
+                <a class="contact-btn" onclick="startVideoCall()">Start Video Call</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDemoAlert(type) {
+            alert(`📱 ${type} Consultation - DEMO MODE\n\nThis is a demo feature. In production, this would connect you to a real doctor.`);
+        }
+
+        function startVideoCall() {
+            const videoModal = document.createElement('div');
+            videoModal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 2000;
+            `;
+            
+            const videoContainer = document.createElement('div');
+            videoContainer.style.cssText = `
+                background: white;
+                border-radius: 20px;
+                padding: 30px;
+                max-width: 800px;
+                width: 90%;
+                text-align: center;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                animation: slideUp 0.5s ease;
+            `;
+            
+            videoContainer.innerHTML = `
+                <h2 style="color: #1a1a2e; margin-bottom: 20px;">🎥 Video Call Started</h2>
+                <div style="
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    border-radius: 15px;
+                    width: 100%;
+                    height: 400px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 20px;
+                    position: relative;
+                    color: white;
+                    font-size: 18px;
+                    font-weight: 600;
+                ">
+                    <div>
+                        <div style="font-size: 50px; margin-bottom: 10px;">👨‍⚕️</div>
+                        <div>Connecting to Doctor...</div>
+                        <div style="font-size: 12px; margin-top: 10px; opacity: 0.8;">Demo Video Call</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button onclick="this.closest('div').parentElement.remove()" style="
+                        padding: 12px 30px;
+                        background: #f5576c;
+                        color: white;
+                        border: none;
+                        border-radius: 10px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        font-size: 1rem;
+                    ">End Call</button>
+                    <button onclick="alert('📞 Microphone is ON\\n\\n📹 Camera is ON\\n\\nThis is a demo. Adjust settings as needed.')" style="
+                        padding: 12px 30px;
+                        background: #667eea;
+                        color: white;
+                        border: none;
+                        border-radius: 10px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        font-size: 1rem;
+                    ">Settings</button>
+                </div>
+            `;
+            
+            videoModal.appendChild(videoContainer);
+            document.body.appendChild(videoModal);
+            
+            videoModal.onclick = (e) => {
+                if (e.target === videoModal) videoModal.remove();
+            };
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Report - MediCure AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding-top: 70px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        nav {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            padding: 12px 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            color: #667eea;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            white-space: nowrap;
+            min-width: fit-content;
+            flex-shrink: 0;
+        }
+
+        .logo svg {
+            width: 28px;
+            height: 28px;
+            filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+            flex: 1;
+            justify-content: flex-end;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::before {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: #e0e7ff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 30px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .content-box {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.5s;
+            color: #000;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-box h2 {
+            color: #1a1a2e;
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .content-box > p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            color: #1a1a2e;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+            line-height: 1.8;
+        }
+
+        .upload-area {
+            border: 3px dashed rgba(102, 126, 234, 0.5);
+            border-radius: 20px;
+            padding: 60px 30px;
+            text-align: center;
+            background: linear-gradient(135deg, #f8f9ff, #e8edff);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f0f4ff, #e0e8ff);
+            transform: translateY(-5px);
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            opacity: 0.9;
+        }
+
+        .upload-area.dragover * {
+            color: #fff;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-area h3 {
+            color: #1a1a2e;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .upload-area p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .file-info {
+            display: none;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid #4caf50;
+        }
+
+        .file-info strong {
+            display: block;
+            color: #1a1a2e;
+            margin-bottom: 5px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff3cd, #ffe69c);
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            border-radius: 12px;
+            color: #856404;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 12px;
+            color: #fff;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .notif-success {
+            background: linear-gradient(135deg, #00d4aa, #00f2fe);
+        }
+
+        .notif-error {
+            background: linear-gradient(135deg, #f5576c, #f093fb);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .content-box { padding: 25px; }
+            .upload-area { padding: 40px 20px; }
+            .warning-box { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="main.html" class="logo">
+                <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="15" y="30" width="70" height="55" rx="8" fill="url(#grad1)" stroke="#667eea" stroke-width="2"/>
+                    <rect x="25" y="15" width="50" height="20" rx="6" fill="url(#grad2)" stroke="#764ba2" stroke-width="2"/>
+                    <circle cx="50" cy="20" r="4" fill="#f093fb"/>
+                    <path d="M45 50 L55 50 M50 45 L50 55" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                    <rect x="30" y="60" width="12" height="15" rx="2" fill="#f093fb" opacity="0.8"/>
+                    <rect x="58" y="60" width="12" height="15" rx="2" fill="#667eea" opacity="0.8"/>
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#764ba2;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                MediCure AI
+            </a>
+            <ul class="nav-links">
+                <li><a href="main.html">Home</a></li>
+                <li><a href="uploadreport.html">Upload PDF</a></li>
+                <li><a href="diseases.html">Disease Prediction</a></li>
+                <li><a href="remedies.html">Home Remedies</a></li>
+                <li><a href="chatbot.html">Medical Chat</a></li>
+                <li><a href="doctor.html">Consult Doctor</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="content-box">
+            <h2>📄 Upload Your Medical Report</h2>
+            <p>Upload your PDF report to get AI-powered analysis and insights</p>
+
+            <div class="info-box">
+                <strong>💡 How it works:</strong>
+                <ul>
+                    <li>Upload your medical report in PDF format</li>
+                    <li>Advanced AI analyzes and extracts medical data</li>
+                    <li>Ask personalized questions about your report</li>
+                    <li>Secure & private - no data stored</li>
+                </ul>
+            </div>
+
+            <div class="upload-area" id="uploadArea" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📁</div>
+                <h3>Click or Drag to Upload</h3>
+                <p>PDF files only (Max 50MB)</p>
+            </div>
+
+            <input type="file" id="fileInput" accept=".pdf" onchange="handleFileUpload(this)">
+
+            <div id="fileInfo" class="file-info">
+                <strong>✓ File Selected</strong>
+                <span><strong>Name:</strong> <span id="fileName"></span></span>
+                <span><strong>Size:</strong> <span id="fileSize"></span></span>
+            </div>
+
+            <div class="warning-box">
+                <strong>🔒 Privacy Notice:</strong> Your report and personal data are not stored on our servers. Analysis happens in real-time only.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showNotification(message, type = "info") {
+            const div = document.createElement("div");
+            div.className = `notification notif-${type}`;
+            div.textContent = message;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3500);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById("uploadArea").classList.add("dragover");
+        }
+
+        function handleDragLeave(e) {
+            document.getElementById("uploadArea").classList.remove("dragover");
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById("uploadArea").classList.remove("dragover");
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload({ files });
+            }
+        }
+
+        async function handleFileUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith(".pdf")) {
+                showNotification("❌ Only PDF files are allowed", "error");
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) {
+                showNotification("❌ File too large (Max 50MB)", "error");
+                return;
+            }
+
+            document.getElementById("fileName").textContent = file.name;
+            document.getElementById("fileSize").textContent = (file.size / 1024).toFixed(2) + " KB";
+            document.getElementById("fileInfo").style.display = "block";
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("http://127.0.0.1:7860/report/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification("✅ Report uploaded successfully!", "success");
+                } else {
+                    showNotification("❌ " + (data.detail || "Upload failed"), "error");
+                }
+            } catch (e) {
+                showNotification("❌ Server connection failed!", "error");
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>

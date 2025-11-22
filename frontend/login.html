@@ -23,7 +23,6 @@
             overflow: hidden;
         }
 
-        /* Animated background circles */
         body::before, body::after {
             content: '';
             position: absolute;
@@ -205,30 +204,10 @@
             box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
         }
 
-        button.login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
-        }
-
         button.register {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        button.register:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
         }
 
         .message {
@@ -238,30 +217,12 @@
             font-size: 14px;
             word-wrap: break-word;
             text-align: center;
-            animation: fadeIn 0.3s ease;
             display: none;
         }
 
-        .message.show {
-            display: block;
-        }
-
-        .message.error {
-            background: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
-        }
-
-        .message.success {
-            background: #efe;
-            color: #2d8;
-            border: 1px solid #cfc;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .message.show { display: block; }
+        .message.error { background: #fee; color: #c33; border: 1px solid #fcc; }
+        .message.success { background: #efe; color: #2d8; border: 1px solid #cfc; }
 
         .loader {
             display: inline-block;
@@ -287,35 +248,9 @@
             border-top: 1px solid #e0e0e0;
         }
 
-        .feature {
-            text-align: center;
-            flex: 1;
-        }
+        .feature-icon { font-size: 24px; margin-bottom: 5px; }
+        .feature-text { font-size: 12px; color: #666; }
 
-        .feature-icon {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .feature-text {
-            font-size: 12px;
-            color: #666;
-        }
-
-        @media (max-width: 500px) {
-            .container {
-                padding: 40px 30px;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            .features {
-                flex-direction: column;
-                gap: 15px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -337,12 +272,8 @@
         </div>
 
         <div class="button-group">
-            <button class="login" id="loginBtn">
-                <span>Login</span>
-            </button>
-            <button class="register" id="registerBtn">
-                <span>Register</span>
-            </button>
+            <button class="login" id="loginBtn"><span>Login</span></button>
+            <button class="register" id="registerBtn"><span>Register</span></button>
         </div>
 
         <div class="message" id="message"></div>
@@ -363,111 +294,54 @@
         </div>
     </div>
 
-    <script>
-        const loginBtn = document.getElementById("loginBtn");
-        const registerBtn = document.getElementById("registerBtn");
-        const messageDiv = document.getElementById("message");
-        const baseURL = "http://127.0.0.1:8000/auth";
+<script>
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const messageDiv = document.getElementById("message");
 
-        function showMessage(text, type) {
-            messageDiv.textContent = text;
-            messageDiv.className = `message show ${type}`;
+    function showMessage(text, type) {
+        messageDiv.textContent = text;
+        messageDiv.className = `message show ${type}`;
+    }
+
+    async function callAPI(endpoint, username, password) {
+        try {
+            const response = await fetch(`/auth/${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+                method: "POST"
+            });
+            const data = await response.json();
+            return { ok: response.ok, data };
+        } catch {
+            return { ok: false, data: { detail: "Server not reachable." } };
         }
+    }
 
-        function hideMessage() {
-            messageDiv.className = "message";
+    loginBtn.addEventListener("click", async () => {
+        const u = username.value.trim();
+        const p = password.value.trim();
+        if (!u || !p) return showMessage("⚠️ Please enter both fields", "error");
+
+        const { ok, data } = await callAPI("login", u, p);
+
+        if (ok) {
+            if (data.access_token) localStorage.setItem("access_token", data.access_token);
+            showMessage("Login successful! Redirecting...", "success");
+            setTimeout(() => window.location.href = "/home", 1200);
+        } else {
+            showMessage("❌ " + (data.detail || "Login failed"), "error");
         }
+    });
 
-        function setLoading(button, isLoading) {
-            const span = button.querySelector('span');
-            if (isLoading) {
-                button.disabled = true;
-                const loader = document.createElement('span');
-                loader.className = 'loader';
-                loader.id = 'loader-' + button.className;
-                button.appendChild(loader);
-            } else {
-                button.disabled = false;
-                const loader = button.querySelector('.loader');
-                if (loader) loader.remove();
-            }
-        }
+    registerBtn.addEventListener("click", async () => {
+        const u = username.value.trim();
+        const p = password.value.trim();
+        if (!u || !p) return showMessage("⚠️ Fill both fields", "error");
+        if (p.length < 4) return showMessage("⚠️ Password too short", "error");
 
-        async function callAPI(endpoint, username, password) {
-            try {
-                const response = await fetch(`${baseURL}/${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
-                    method: "POST"
-                });
-                const data = await response.json();
-                return { ok: response.ok, data };
-            } catch (err) {
-                return { ok: false, data: { detail: "Cannot connect to server. Please check if the server is running." } };
-            }
-        }
+        const { ok, data } = await callAPI("register", u, p);
+        showMessage(ok ? "Registration successful! Now login." : data.detail, ok ? "success" : "error");
+    });
 
-        loginBtn.addEventListener("click", async () => {
-            const username = document.getElementById("username").value.trim();
-            const password = document.getElementById("password").value.trim();
-            
-            if (!username || !password) {
-                showMessage("⚠️ Please enter both username and password", "error");
-                return;
-            }
-
-            hideMessage();
-            setLoading(loginBtn, true);
-
-            const { ok, data } = await callAPI("login", username, password);
-            
-            setLoading(loginBtn, false);
-
-            if (ok) {
-                if (data.access_token) {
-                    localStorage.setItem("access_token", data.access_token);
-                }
-                showMessage("✅ " + (data.message || "Login successful! Redirecting..."), "success");
-                setTimeout(() => {
-                    window.location.href = "index.html";
-                }, 1500);
-            } else {
-                showMessage("❌ " + (data.detail || "Login failed"), "error");
-            }
-        });
-
-        registerBtn.addEventListener("click", async () => {
-            const username = document.getElementById("username").value.trim();
-            const password = document.getElementById("password").value.trim();
-            
-            if (!username || !password) {
-                showMessage("⚠️ Please enter both username and password", "error");
-                return;
-            }
-
-            if (password.length < 4) {
-                showMessage("⚠️ Password must be at least 4 characters", "error");
-                return;
-            }
-
-            hideMessage();
-            setLoading(registerBtn, true);
-
-            const { ok, data } = await callAPI("register", username, password);
-            
-            setLoading(registerBtn, false);
-
-            if (ok) {
-                showMessage("✅ " + (data.message || "Registration successful") + " You can now login.", "success");
-            } else {
-                showMessage("❌ " + (data.detail || "Registration failed"), "error");
-            }
-        });
-
-        // Allow Enter key to login
-        document.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                loginBtn.click();
-            }
-        });
-    </script>
+</script>
 </body>
 </html>

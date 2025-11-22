@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consult Doctor - MediCure AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .content-box {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.5s;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-box h2 {
+            color: #1a1a2e;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .content-box > p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            color: #1a1a2e;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .info-box li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        /* Doctor Card */
+        .doctor-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .doctor-avatar {
+            width: 120px;
+            height: 120px;
+            background: #fff;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .doctor-card h3 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .doctor-card p {
+            font-size: 1.1rem;
+            color: #e0e7ff;
+            margin-bottom: 5px;
+        }
+
+        .section-title {
+            color: #1a1a2e;
+            font-size: 1.8rem;
+            margin: 30px 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Contact Methods */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .contact-card {
+            padding: 30px;
+            border-radius: 16px;
+            border: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .contact-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .contact-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .contact-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .contact-desc {
+            font-size: 0.9rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        .video-card { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+        .voice-card { background: linear-gradient(135deg, #ff9966, #ff5e62); }
+        .whatsapp-card { background: linear-gradient(135deg, #25d366, #128c7e); }
+
+        /* Preparation Checklist */
+        .checklist {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            color: #1a1a2e;
+        }
+
+        .checklist h4 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+        }
+
+        .checklist-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .checklist-text {
+            line-height: 1.6;
+        }
+
+        /* Emergency Info */
+        .emergency-box {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            color: #fff;
+            text-align: center;
+        }
+
+        .emergency-box h4 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .emergency-box p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .emergency-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff3cd, #ffe6a2);
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 30px;
+            color: #1a1a2e;
+        }
+
+        .warning-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideInRight 0.4s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .notif-success { background: linear-gradient(135deg, #00d4aa, #00f2fe); }
+        .notif-info { background: linear-gradient(135deg, #667eea, #764ba2); }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .content-box { padding: 25px; }
+            .content-box h2 { font-size: 2rem; }
+            .contact-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo" onclick="window.location.href='/'">🏥 MediCure AI</div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/uploadreport">Upload PDF</a></li>
+                <li><a href="/prediction">Disease Prediction</a></li>
+                <li><a href="/remedies">Home Remedies</a></li>
+                <li><a href="/chatbot">Medical Chat</a></li>
+                <li><a href="/doctor" style="background: rgba(255,255,255,0.2);">Consult Doctor</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="content-box">
+            <h2>👨‍⚕️ Consult with a Doctor</h2>
+            <p>Need professional medical advice? Connect with a real doctor for personalized consultation and care.</p>
+
+            <div class="info-box">
+                <strong>💡 Why consult a doctor:</strong>
+                <ul>
+                    <li>Get professional medical diagnosis and treatment</li>
+                    <li>Receive personalized healthcare recommendations</li>
+                    <li>Discuss complex health concerns in detail</li>
+                    <li>Get prescription medications if needed</li>
+                    <li>Follow-up care and continuous monitoring</li>
+                    <li>Second opinions on diagnoses and treatment plans</li>
+                </ul>
+            </div>
+
+            <!-- Doctor Profile -->
+            <div class="doctor-card">
+                <div class="doctor-avatar">👨‍⚕️</div>
+                <h3>Dr. Medical Specialist</h3>
+                <p>General Physician & Health Consultant</p>
+                <p>Available for consultations via multiple channels</p>
+            </div>
+
+            <h3 class="section-title">📞 Choose Your Consultation Method</h3>
+
+            <div class="contact-grid">
+                <button class="contact-card video-card" onclick="videoCall()">
+                    <div class="contact-icon">📹</div>
+                    <div class="contact-title">Video Call</div>
+                    <div class="contact-desc">Face-to-face video consultation</div>
+                </button>
+
+                <button class="contact-card voice-card" onclick="voiceCall()">
+                    <div class="contact-icon">📞</div>
+                    <div class="contact-title">Voice Call</div>
+                    <div class="contact-desc">Audio consultation via phone</div>
+                </button>
+
+                <button class="contact-card whatsapp-card" onclick="whatsappDoctor()">
+                    <div class="contact-icon">💬</div>
+                    <div class="contact-title">WhatsApp</div>
+                    <div class="contact-desc">Chat with doctor on WhatsApp</div>
+                </button>
+            </div>
+
+            <!-- Preparation Checklist -->
+            <div class="checklist">
+                <h4>📋 Before Your Consultation - Prepare These</h4>
+                
+                <div class="checklist-item">
+                    <div class="checklist-icon">📝</div>
+                    <div class="checklist-text">
+                        <strong>List of Symptoms</strong><br>
+                        Write down all symptoms you're experiencing, when they started, and their severity
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <div class="checklist-icon">💊</div>
+                    <div class="checklist-text">
+                        <strong>Current Medications</strong><br>
+                        List all medications, supplements, and vitamins you're currently taking
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <div class="checklist-icon">🏥</div>
+                    <div class="checklist-text">
+                        <strong>Medical History</strong><br>
+                        Previous illnesses, surgeries, chronic conditions, and family medical history
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <div class="checklist-icon">⚠️</div>
+                    <div class="checklist-text">
+                        <strong>Allergies</strong><br>
+                        List any drug allergies, food allergies, or other allergic reactions
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <div class="checklist-icon">📄</div>
+                    <div class="checklist-text">
+                        <strong>Medical Reports</strong><br>
+                        Keep recent test results, reports, and prescriptions accessible
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Information -->
+            <div class="emergency-box">
+                <h4>🚨 Medical Emergency?</h4>
+                <p>For life-threatening emergencies, call emergency services immediately</p>
+                <div class="emergency-number">
+                    🚑 Emergency: 911 (US) / 112 (India)
+                </div>
+                <p style="font-size: 0.95rem;">
+                    Don't wait for a consultation if you're experiencing chest pain, 
+                    difficulty breathing, severe bleeding, or loss of consciousness
+                </p>
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ Important Note:</strong>
+                Video and voice call features are demonstration simulations for the prototype. 
+                The WhatsApp button connects to a real WhatsApp number (8726717318) for actual doctor consultation. 
+                For a full telemedicine experience, please use professional healthcare platforms.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showNotification(message, type = 'info') {
+            const notif = document.createElement('div');
+            notif.className = `notification notif-${type}`;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3500);
+        }
+
+        function videoCall() {
+            showNotification('📹 Video call feature is a demo simulation', 'info');
+            alert('📹 Starting Video Call with Doctor...\n\nThis is a demo feature. In production, this would:\n• Open a video conference room\n• Connect you with available doctors\n• Enable real-time video consultation\n\nFor actual consultation, please use the WhatsApp option.');
+        }
+
+        function voiceCall() {
+            showNotification('📞 Voice call feature is a demo simulation', 'info');
+            alert('📞 Starting Voice Call with Doctor...\n\nThis is a demo feature. In production, this would:\n• Connect you to doctor\'s phone line\n• Enable audio-only consultation\n• Record call for medical records\n\nFor actual consultation, please use the WhatsApp option.');
+        }
+
+        function whatsappDoctor() {
+            showNotification('💬 Opening WhatsApp...', 'success');
+            window.open('https://wa.me/918726717318?text=Hello%20Doctor,%20I%20need%20medical%20consultation', '_blank');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+# Git
+
+.git
+.gitignore
+README.md
+
+# Python
+
+**pycache**
+_.pyc
+_.pyo
+\*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing
+
+.tox
+.coverage
+.coverage._
+.cache
+nosetests.xml
+coverage.xml
+_.cover
+\*.log
+.pytest_cache
+.mypy_cache
+.hypothesis
+
+# IDE
+
+.vscode
+.idea
+_.swp
+_.swo
+
+# OS
+
+.DS_Store
+Thumbs.db
+
+# Docker
+
+Dockerfile
+.dockerignore
+
+# Logs
+
+logs
+\*.log
+
+# Temp files
+
+tmp/
+temp/

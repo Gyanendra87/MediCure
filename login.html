@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCure AI - Login/Register</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        body::before {
+            width: 400px;
+            height: 400px;
+            top: -100px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        body::after {
+            width: 300px;
+            height: 300px;
+            bottom: -50px;
+            left: -50px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(180deg); }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 50px 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
+        }
+
+        h2 {
+            color: #333;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            color: #999;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        input[type=text],
+        input[type=password] {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            font-size: 16px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        input:focus {
+            border-color: #667eea;
+            background: white;
+            outline: none;
+        }
+
+        input:focus + label,
+        input:not(:placeholder-shown) + label {
+            top: -10px;
+            left: 10px;
+            font-size: 12px;
+            color: #667eea;
+            background: white;
+            padding: 0 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+
+        button.login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        button.login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        button.register {
+            background: linear-gradient(135deg, #00d4aa 0%, #00f2fe 100%);
+            box-shadow: 0 8px 25px rgba(0, 212, 170, 0.3);
+        }
+
+        button.register:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 212, 170, 0.4);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            text-align: center;
+            border-radius: 12px;
+            font-size: 14px;
+            display: none;
+            font-weight: 600;
+        }
+
+        .message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.error {
+            background: #fee;
+            color: #c33;
+        }
+
+        .message.success {
+            background: #efe;
+            color: #2d8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo-section">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="15" y="30" width="70" height="55" rx="8" fill="url(#grad1)" stroke="#fff" stroke-width="2"/>
+                    <rect x="25" y="15" width="50" height="20" rx="6" fill="url(#grad2)" stroke="#fff" stroke-width="2"/>
+                    <circle cx="50" cy="20" r="4" fill="#f093fb"/>
+                    <path d="M45 50 L55 50 M50 45 L50 55" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                    <rect x="30" y="60" width="12" height="15" rx="2" fill="#f093fb" opacity="0.8"/>
+                    <rect x="58" y="60" width="12" height="15" rx="2" fill="#fff" opacity="0.8"/>
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#fff;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#fff;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h2>MediCure AI</h2>
+            <p class="subtitle">Your Intelligent Health Assistant</p>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="username" placeholder=" " required>
+            <label>Username</label>
+        </div>
+
+        <div class="input-group">
+            <input type="password" id="password" placeholder=" " required>
+            <label>Password</label>
+        </div>
+
+        <div class="button-group">
+            <button class="login" id="loginBtn">Login</button>
+            <button class="register" id="registerBtn">Register</button>
+        </div>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        const BASE_URL = "http://127.0.0.1:8000";
+        const loginBtn = document.getElementById("loginBtn");
+        const registerBtn = document.getElementById("registerBtn");
+        const messageDiv = document.getElementById("message");
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message show ${type}`;
+            setTimeout(() => messageDiv.classList.remove("show"), 4000);
+        }
+
+        loginBtn.addEventListener("click", async () => {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+
+            if (!username || !password) {
+                showMessage("Fill all fields", "error");
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = "Logging in...";
+
+            try {
+                const response = await fetch(
+                    `${BASE_URL}/auth/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+                    { method: "POST" }
+                );
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem("token", data.access_token);
+                    showMessage("✅ Login successful!", "success");
+                    setTimeout(() => window.location.href = "main.html", 1500);
+                } else {
+                    showMessage(data.detail || "Login failed", "error");
+                }
+            } catch (err) {
+                showMessage("Connection error. Please try again.", "error");
+                console.error(err);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = "Login";
+            }
+        });
+
+        registerBtn.addEventListener("click", async () => {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+
+            if (!username || !password) {
+                showMessage("Fill all fields", "error");
+                return;
+            }
+
+            registerBtn.disabled = true;
+            registerBtn.textContent = "Registering...";
+
+            try {
+                const response = await fetch(
+                    `${BASE_URL}/auth/register?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+                    { method: "POST" }
+                );
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage("✅ Registration successful! Please login.", "success");
+                    document.getElementById("username").value = "";
+                    document.getElementById("password").value = "";
+                } else {
+                    showMessage(data.detail || "Registration failed", "error");
+                }
+            } catch (err) {
+                showMessage("Connection error. Please try again.", "error");
+                console.error(err);
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.textContent = "Register";
+            }
+        });
+
+        // Allow Enter key to trigger login
+        document.querySelectorAll("input").forEach(input => {
+            input.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") loginBtn.click();
+            });
+        });
+    </script>
+</body>
+</html>
