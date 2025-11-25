@@ -85,12 +85,14 @@
         .nav-links a {
             color: #fff;
             text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
             padding: 8px 12px;
             border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
             position: relative;
+            display: inline-block;
+            white-space: nowrap;
         }
 
         .nav-links a::before {
@@ -106,6 +108,28 @@
 
         .nav-links a:hover::before {
             width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: #e0e7ff;
+        }
+
+        .nav-links a.logout-btn {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .nav-links a.logout-btn:hover {
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        .nav-links a.logout-btn::before {
+            display: none;
+        }
+        
+        /* Prevent navbar shift */
+        .nav-links li {
+            flex-shrink: 0;
         }
 
         .container {
@@ -233,6 +257,53 @@
             color: #333;
             font-size: 1rem;
             margin-bottom: 15px;
+            white-space: pre-line;
+        }
+
+        .source-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .source-database {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+        }
+
+        .source-external {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+        }
+
+        .yogasan-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .yogasan-section h3 {
+            color: #667eea;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .yogasan-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .yogasan-tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
 
         .empty-state {
@@ -319,6 +390,7 @@
                 <li><a href="remedies.html">Home Remedies</a></li>
                 <li><a href="chatbot.html">Medical Chat</a></li>
                 <li><a href="doctor.html">Consult Doctor</a></li>
+                <li><a href="#" onclick="logout(event)" class="logout-btn">Logout</a></li>
             </ul>
         </div>
     </nav>
@@ -359,15 +431,42 @@
                 remedyList.innerHTML = "";
 
                 if (data.home_remedies && data.home_remedies.length > 0) {
-                    data.home_remedies.forEach((remedy, idx) => {
-                        const card = document.createElement("div");
-                        card.className = "remedy-card";
-                        card.innerHTML = `
-                            <h2>🌿 ${disease.charAt(0).toUpperCase() + disease.slice(1)}</h2>
-                            <p>${remedy}</p>
-                        `;
-                        remedyList.appendChild(card);
+                    // Determine source badge
+                    const sourceBadgeClass = data.source === "Database" ? "source-database" : "source-external";
+                    const sourceIcon = data.source === "Database" ? "💾" : "🌐";
+                    
+                    // Create main remedy card
+                    const card = document.createElement("div");
+                    card.className = "remedy-card";
+                    
+                    let cardHTML = `
+                        <h2>🌿 ${disease.charAt(0).toUpperCase() + disease.slice(1)}</h2>
+                        <span class="source-badge ${sourceBadgeClass}">${sourceIcon} ${data.source}</span>
+                    `;
+                    
+                    // Add remedies
+                    data.home_remedies.forEach((remedy) => {
+                        cardHTML += `<p>${remedy}</p>`;
                     });
+                    
+                    // Add yogasan if available
+                    if (data.yogasan && data.yogasan.length > 0) {
+                        cardHTML += `
+                            <div class="yogasan-section">
+                                <h3>🧘 Recommended Yogasanas:</h3>
+                                <div class="yogasan-list">
+                        `;
+                        data.yogasan.forEach(yoga => {
+                            cardHTML += `<span class="yogasan-tag">${yoga}</span>`;
+                        });
+                        cardHTML += `
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    card.innerHTML = cardHTML;
+                    remedyList.appendChild(card);
                 } else {
                     const empty = document.createElement("div");
                     empty.className = "empty-state";
@@ -393,6 +492,14 @@
         document.getElementById("searchInput").addEventListener("keypress", (e) => {
             if (e.key === "Enter") fetchRemedies();
         });
+
+        function logout(event) {
+            event.preventDefault();
+            if (confirm("Are you sure you want to logout?")) {
+                localStorage.removeItem("token");
+                window.location.href = "login.html";
+            }
+        }
     </script>
 </body>
 </html>

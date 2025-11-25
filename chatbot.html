@@ -90,6 +90,8 @@
             padding: 8px 12px;
             border-radius: 8px;
             position: relative;
+            display: inline-block;
+            white-space: nowrap;
         }
 
         .nav-links a::before {
@@ -109,6 +111,24 @@
 
         .nav-links a:hover {
             color: #e0e7ff;
+        }
+
+        .nav-links a.logout-btn {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .nav-links a.logout-btn:hover {
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        .nav-links a.logout-btn::before {
+            display: none;
+        }
+        
+        /* Prevent navbar shift */
+        .nav-links li {
+            flex-shrink: 0;
         }
 
         .container {
@@ -316,6 +336,7 @@
                 <li><a href="remedies.html">Home Remedies</a></li>
                 <li><a href="chatbot.html">Medical Chat</a></li>
                 <li><a href="doctor.html">Consult Doctor</a></li>
+                <li><a href="#" onclick="logout(event)" class="logout-btn">Logout</a></li>
             </ul>
         </div>
     </nav>
@@ -388,6 +409,14 @@
 
         function handleKeyPress(e) {
             if (e.key === "Enter") sendMessage();
+        }
+
+        function logout(event) {
+            event.preventDefault();
+            if (confirm("Are you sure you want to logout?")) {
+                localStorage.removeItem("token");
+                window.location.href = "login.html";
+            }
         }
     </script>
 </body>

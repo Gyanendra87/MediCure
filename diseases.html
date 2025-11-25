@@ -90,6 +90,8 @@
             padding: 8px 12px;
             border-radius: 8px;
             position: relative;
+            display: inline-block;
+            white-space: nowrap;
         }
 
         .nav-links a::before {
@@ -109,6 +111,24 @@
 
         .nav-links a:hover {
             color: #e0e7ff;
+        }
+
+        .nav-links a.logout-btn {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .nav-links a.logout-btn:hover {
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        .nav-links a.logout-btn::before {
+            display: none;
+        }
+        
+        /* Prevent navbar shift */
+        .nav-links li {
+            flex-shrink: 0;
         }
 
         .container {
@@ -241,6 +261,25 @@
             line-height: 1.6;
         }
 
+        .source-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .source-database {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+        }
+
+        .source-external {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+        }
+
         .notification {
             position: fixed;
             top: 90px;
@@ -306,6 +345,7 @@
                 <li><a href="remedies.html">Home Remedies</a></li>
                 <li><a href="chatbot.html">Medical Chat</a></li>
                 <li><a href="doctor.html">Consult Doctor</a></li>
+                <li><a href="#" onclick="logout(event)" class="logout-btn">Logout</a></li>
             </ul>
         </div>
     </nav>
@@ -331,7 +371,7 @@
                 <ul id="dietList"></ul>
                 <p><strong>Workout:</strong></p>
                 <p id="workoutText"></p>
-                <p><strong>Home Remedies:</strong></p>
+                <p><strong>Home Remedies:</strong> <span id="remedySource" class="source-badge"></span></p>
                 <ul id="remediesList"></ul>
                 <p><strong>Yoga Asanas:</strong></p>
                 <ul id="yogasanList"></ul>
@@ -353,11 +393,27 @@
         function fillList(id, items) {
             const ul = document.getElementById(id);
             ul.innerHTML = "";
-            if (items) items.forEach(i => {
-                const li = document.createElement("li");
-                li.textContent = i;
-                ul.appendChild(li);
-            });
+            if (items) {
+                // Check if items is a string with bullet points
+                if (typeof items === 'string') {
+                    const lines = items.split('\n').filter(line => line.trim());
+                    lines.forEach(line => {
+                        const li = document.createElement("li");
+                        li.textContent = line.replace(/^[•\-]\s*/, ''); // Remove bullet if present
+                        ul.appendChild(li);
+                    });
+                } else if (Array.isArray(items)) {
+                    items.forEach(i => {
+                        const li = document.createElement("li");
+                        li.textContent = i;
+                        ul.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement("li");
+                    li.textContent = items;
+                    ul.appendChild(li);
+                }
+            }
         }
 
         async function predictDisease() {
@@ -386,6 +442,13 @@
                 fillList("remediesList", data.home_remedies);
                 fillList("yogasanList", data.yogasan);
 
+                // Show remedy source badge
+                const remedySource = document.getElementById("remedySource");
+                const source = data.remedy_source || "Unknown";
+                const sourceIcon = source === "Database" ? "💾" : "🌐";
+                remedySource.textContent = `${sourceIcon} ${source}`;
+                remedySource.className = `source-badge ${source === "Database" ? "source-database" : "source-external"}`;
+
                 showNotification("Disease Predicted Successfully!", "success");
             } catch (err) {
                 showNotification("Prediction Failed!", "error");
@@ -394,6 +457,14 @@
 
             btn.disabled = false;
             btn.textContent = "🔍 Predict Disease";
+        }
+
+        function logout(event) {
+            event.preventDefault();
+            if (confirm("Are you sure you want to logout?")) {
+                localStorage.removeItem("token");
+                window.location.href = "login.html";
+            }
         }
     </script>
 </body>
