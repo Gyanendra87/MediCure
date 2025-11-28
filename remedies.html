@@ -268,6 +268,38 @@
             color: #667eea;
         }
 
+        .remedy-list {
+            margin-top: 20px;
+            padding-left: 0;
+        }
+
+        .remedy-list li {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            list-style: none;
+            color: #333;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+
+        .remedy-list li:hover {
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
+            transform: translateX(5px);
+            border-left-color: #764ba2;
+        }
+
+        .remedy-list li::before {
+            content: "✓";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
         .source-badge {
             display: inline-block;
             padding: 6px 12px;
@@ -425,12 +457,23 @@
             font-style: italic;
         }
 
+        .matched-disease-info {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 12px 18px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            color: #1565c0;
+            font-style: italic;
+            border-left: 4px solid #667eea;
+        }
+
         @media (max-width: 768px) {
             .nav-links { display: none; }
             h1 { font-size: 2.2rem; }
             .search-section { flex-direction: column; }
             .search-btn { width: 100%; }
             .remedy-card { padding: 20px; }
+            .remedy-list li { padding: 12px 15px; }
         }
     </style>
 </head>
@@ -537,25 +580,38 @@
                     
                     let cardHTML = `
                         <h2>🌿 ${data.disease || disease.charAt(0).toUpperCase() + disease.slice(1)}</h2>
-                        ${matchedDifferent ? `<p style="color: #667eea; font-style: italic;">💡 Showing remedy for similar condition: "${data.disease}"</p>` : ''}
+                        ${matchedDifferent ? `<div class="matched-disease-info">💡 Showing remedy for similar condition: "${data.disease}"</div>` : ''}
                         <span class="source-badge ${sourceBadgeClass}">${sourceIcon} ${data.source || 'Database'}</span>
                         ${data.confidence ? `<span class="confidence-badge">📊 ${data.confidence} Match</span>` : ''}
                     `;
                     
-                    // Handle remedies
-                    if (Array.isArray(data.home_remedies)) {
-                        data.home_remedies.forEach((remedy) => {
-                            if (remedy && remedy.trim()) {
-                                cardHTML += `<p>${remedy}</p>`;
-                            }
-                        });
-                    } else if (data.home_remedies && typeof data.home_remedies === 'string') {
-                        cardHTML += `<p>${data.home_remedies}</p>`;
+                    // Display item info if available
+                    if (data.item && data.item !== 'Web Search' && data.item !== 'N/A') {
+                        cardHTML += `<p style="margin-top: 15px;"><strong>💊 Main Ingredient:</strong> ${data.item}</p>`;
                     }
                     
-                    // Display item info if available
-                    if (data.item) {
-                        cardHTML += `<p><strong>💊 Ingredient:</strong> ${data.item}</p>`;
+                    // Handle remedies as a list
+                    if (Array.isArray(data.home_remedies) && data.home_remedies.length > 0) {
+                        cardHTML += `
+                            <div style="margin-top: 20px;">
+                                <h3 style="color: #667eea; margin-bottom: 12px;">📋 Home Remedies:</h3>
+                                <ul class="remedy-list">
+                        `;
+                        
+                        data.home_remedies.forEach((remedy) => {
+                            // Convert to string and check if valid
+                            const remedyText = String(remedy || '').trim();
+                            if (remedyText && remedyText.length > 0) {
+                                cardHTML += `<li>${remedyText}</li>`;
+                            }
+                        });
+                        
+                        cardHTML += `
+                                </ul>
+                            </div>
+                        `;
+                    } else if (data.home_remedies && typeof data.home_remedies === 'string') {
+                        cardHTML += `<p style="margin-top: 20px;">${data.home_remedies}</p>`;
                     }
                     
                     // Handle yogasan with links
@@ -589,6 +645,13 @@
                         cardHTML += `
                                 </div>
                                 ${!hasAnyLinks ? '<p class="no-link-msg">💡 Tutorial links not available for these poses</p>' : ''}
+                            </div>
+                        `;
+                    } else if (data.yogasan && typeof data.yogasan === 'string' && data.yogasan !== 'Not available') {
+                        cardHTML += `
+                            <div class="yogasan-section">
+                                <h3>🧘 Recommended Yogasanas:</h3>
+                                <p>${data.yogasan}</p>
                             </div>
                         `;
                     }
@@ -640,7 +703,6 @@
         function logout(event) {
             event.preventDefault();
             if (confirm("Are you sure you want to logout?")) {
-                localStorage.removeItem("token");
                 window.location.href = "login.html";
             }
         }
