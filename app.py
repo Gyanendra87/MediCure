@@ -17,6 +17,9 @@ from disease_prediction import health_router  # Disease prediction routes
 # Home Remedies (Cosine Similarity)
 from home_remedies import predict_home_remedy, get_top_predictions, get_all_diseases
 
+# ✅ Import the new report router with AI summarization
+from uploadreport import uploadreport_router
+
 # ==========================
 # Load environment variables
 # ==========================
@@ -119,19 +122,20 @@ def ask_question(query: str = Query(...)):
     return {"answer": answer}
 
 # ==========================
-# PDF Upload Router
+# ❌ OLD PDF UPLOAD ROUTER - REMOVED
+# This was only saving files without AI processing
 # ==========================
-upload_router = APIRouter(prefix="/upload", tags=["Upload"])
-
-@upload_router.post("/")
-def upload_pdf(file: UploadFile = File(...)):
-    global report_context
-    file_location = f"uploads/{file.filename}"
-    os.makedirs("uploads", exist_ok=True)
-    with open(file_location, "wb") as f:
-        shutil.copyfileobj(file.file, f)
-    report_context = f"PDF uploaded: {file.filename}"
-    return {"message": f"Uploaded {file.filename}"}
+# upload_router = APIRouter(prefix="/upload", tags=["Upload"])
+# 
+# @upload_router.post("/")
+# def upload_pdf(file: UploadFile = File(...)):
+#     global report_context
+#     file_location = f"uploads/{file.filename}"
+#     os.makedirs("uploads", exist_ok=True)
+#     with open(file_location, "wb") as f:
+#         shutil.copyfileobj(file.file, f)
+#     report_context = f"PDF uploaded: {file.filename}"
+#     return {"message": f"Uploaded {file.filename}"}
 
 # ==========================
 # Home Remedies API
@@ -224,7 +228,8 @@ def health_check():
 # ==========================
 app.include_router(auth_router)
 app.include_router(chat_router)
-app.include_router(upload_router)
+# app.include_router(upload_router)  # ❌ OLD - REMOVED
+app.include_router(uploadreport_router)  # ✅ NEW - AI-powered report analysis
 app.include_router(remedy_router)
 app.include_router(health_router_local)
 app.include_router(health_router)  # Disease prediction module
@@ -246,4 +251,6 @@ def home_page():
 if __name__ == "__main__":
     import uvicorn
     print("🚀 MediCure AI Backend running at http://0.0.0.0:8000")
+    print("📋 Report Upload with AI: http://0.0.0.0:8000/report/upload")
+    print("📚 API Docs: http://0.0.0.0:8000/docs")
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

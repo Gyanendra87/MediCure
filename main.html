@@ -129,7 +129,6 @@
             display: none;
         }
         
-        /* Prevent navbar shift */
         .nav-links li {
             flex-shrink: 0;
         }
@@ -272,6 +271,50 @@
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.5);
             transform: translateY(-3px);
+        }
+
+        .hf-spaces-section {
+            margin: 50px 0;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hf-spaces-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .iframe-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            max-width: 900px;
+        }
+
+        .iframe-wrapper {
+            width: 100%;
+            max-width: 850px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .iframe-wrapper iframe {
+            width: 100%;
+            height: 450px;
+            border-radius: 10px;
+            border: none;
         }
 
         .stats-section {
@@ -522,6 +565,8 @@
 
         @media (max-width: 1200px) {
             .features-grid { grid-template-columns: repeat(3, 1fr); }
+            .iframe-wrapper { max-width: 700px; }
+            .iframe-wrapper iframe { height: 400px; }
         }
 
         @media (max-width: 1024px) {
@@ -539,12 +584,16 @@
             .features-grid { grid-template-columns: 1fr; gap: 18px; }
             .stats-section { grid-template-columns: repeat(2, 1fr); padding: 25px; }
             .section-title { font-size: 1.9rem; margin-bottom: 30px; }
+            .hf-spaces-section { padding: 25px; }
+            .iframe-wrapper { padding: 15px; }
+            .iframe-wrapper iframe { height: 350px; }
         }
 
         @media (max-width: 480px) {
             .hero h1 { font-size: 1.8rem; }
             .tagline { font-size: 0.95rem; }
             .stats-section { grid-template-columns: 1fr; }
+            .iframe-wrapper iframe { height: 300px; }
         }
     </style>
 </head>
@@ -553,6 +602,7 @@
     <nav>
         <div class="nav-container">
             <a href="main.html" class="logo">
+                <!-- Logo SVG (unchanged) -->
                 <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="15" y="30" width="70" height="55" rx="8" fill="url(#grad1)" stroke="#667eea" stroke-width="2"/>
                     <rect x="25" y="15" width="50" height="20" rx="6" fill="url(#grad2)" stroke="#764ba2" stroke-width="2"/>
@@ -615,6 +665,20 @@
                 <div class="stat-card">
                     <div class="stat-number">∞</div>
                     <div class="stat-label">Knowledge Base</div>
+                </div>
+            </div>
+
+            <!-- Hugging Face Spaces Embed Section -->
+            <div class="hf-spaces-section">
+                <h2 class="hf-spaces-title">Try Our AI Demo</h2>
+                <div class="iframe-container">
+                    <div class="iframe-wrapper">
+                        <iframe
+                            src="https://huggingface.co/spaces/gyanendra87/medicure/embed"
+                            title="MediCure AI Demo"
+                            loading="lazy"
+                        ></iframe>
+                    </div>
                 </div>
             </div>
 
@@ -691,7 +755,6 @@
         function logout(event) {
             event.preventDefault();
             if (confirm("Are you sure you want to logout?")) {
-                localStorage.removeItem("token");
                 window.location.href = "login.html";
             }
         }

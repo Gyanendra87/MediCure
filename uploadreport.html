@@ -1,353 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Upload Medical Report - MediCure AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%;
-        }
-
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html,body { height:100%; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            min-height: 100vh;
-            color: #fff;
-            overflow-x: hidden;
-            padding-top: 70px;
+            min-height:100vh; color:#fff; overflow-x:hidden; padding-top:70px;
         }
 
         nav {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            padding: 12px 0;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(20px);
+            padding:12px 0; position:fixed; top:0; width:100%; z-index:1000;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2); border-bottom:1px solid rgba(255,255,255,0.1);
         }
 
-        .nav-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 30px;
-            width: 100%;
-        }
+        .nav-container { max-width:1400px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:0 30px; width:100%; }
+        .logo { font-size:18px; font-weight:800; display:flex; gap:10px; align-items:center; color:#667eea; text-decoration:none; }
+        .nav-links { display:flex; gap:25px; list-style:none; flex:1; justify-content:flex-end; }
+        .nav-links a { color:#fff; text-decoration:none; font-weight:600; font-size:.9rem; padding:8px 12px; border-radius:8px; }
 
-        .logo {
-            font-size: 18px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            color: #667eea;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            white-space: nowrap;
-            min-width: fit-content;
-            flex-shrink: 0;
-        }
+        .main-container { max-width:1400px; margin:20px auto; display:grid; grid-template-columns:1fr 1fr; gap:30px; align-items:start; padding:0 30px; }
+        .upload-container, .summary-container { background: rgba(255,255,255,0.95); border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden; color:inherit; }
+        .summary-container { min-height:500px; }
 
-        .logo svg {
-            filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
-            transition: filter 0.3s ease;
-            width: 28px;
-            height: 28px;
-        }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; padding:30px; text-align:center; }
+        .content { padding:40px; }
+        .upload-section { background:#f8f9fa; border:2px dashed #667eea; border-radius:15px; padding:40px; text-align:center; transition:all .3s ease; color:#333; }
+        .upload-section:hover { border-color:#764ba2; background:#f0f1ff; }
 
-        .logo:hover {
-            transform: scale(1.05);
-        }
+        .upload-icon { font-size:60px; color:#667eea; margin-bottom:20px; }
+        input[type="file"] { display:none; }
+        .file-label { display:inline-block; background:white; color:#667eea; padding:12px 30px; border-radius:8px; cursor:pointer; border:2px solid #667eea; font-weight:600; }
+        .file-name { display:block; margin-top:15px; color:#666; font-size:14px; min-height:20px; }
 
-        .nav-links {
-            display: flex;
-            gap: 25px;
-            list-style: none;
-            flex: 1;
-            justify-content: flex-end;
-        }
+        .upload-btn { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; border:none; padding:15px 50px; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; margin-top:20px; }
+        .upload-btn:disabled { opacity:0.6; cursor:not-allowed; }
 
-        .nav-links a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            padding: 8px 12px;
-            border-radius: 8px;
-            position: relative;
-            display: inline-block;
-            white-space: nowrap;
-        }
+        .loading { display:none; text-align:center; padding:30px; color:#333; }
+        .loading.active { display:block; }
+        .spinner { border:4px solid #f3f3f3; border-top:4px solid #667eea; border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite; margin:0 auto 20px; }
+        @keyframes spin { 0% { transform:rotate(0deg);} 100% { transform:rotate(360deg);} }
 
-        .nav-links a::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            transition: width 0.3s ease;
-        }
-
-        .nav-links a:hover::before {
-            width: 100%;
-        }
-
-        .nav-links a:hover {
-            color: #e0e7ff;
-        }
-
-        .nav-links a.logout-btn {
-            background: rgba(255, 107, 107, 0.2);
-            color: #ff6b6b;
-        }
-
-        .nav-links a.logout-btn:hover {
-            background: rgba(255, 107, 107, 0.3);
-        }
-
-        .nav-links a.logout-btn::before {
-            display: none;
-        }
-        
-        /* Prevent navbar shift */
-        .nav-links li {
-            flex-shrink: 0;
-        }
-
-        .main-container {
-            max-width: 1400px;
-            margin: 20px auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            align-items: start;
-            padding: 0 30px;
-        }
-
-        .upload-container, .summary-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .summary-container {
-            min-height: 500px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-        .upload-section {
-            background: #f8f9fa;
-            border: 2px dashed #667eea;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .upload-section:hover {
-            border-color: #764ba2;
-            background: #f0f1ff;
-        }
-
-        .upload-icon {
-            font-size: 60px;
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-
-        .file-input-wrapper {
-            position: relative;
-            margin: 20px 0;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .file-label {
-            display: inline-block;
-            background: white;
-            color: #667eea;
-            padding: 12px 30px;
-            border-radius: 8px;
-            cursor: pointer;
-            border: 2px solid #667eea;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .file-label:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .file-name {
-            display: block;
-            margin-top: 15px;
-            color: #666;
-            font-size: 14px;
-            min-height: 20px;
-        }
-
-        .upload-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 50px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .upload-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .upload-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 30px;
-        }
-
-        .loading.active {
-            display: block;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .summary-content {
-            padding: 30px;
-            min-height: 400px;
-        }
-
+        .summary-content { padding:30px; min-height:450px; }
+        /* Keep summary-display stable so it doesn't collapse during reflow */
         .summary-display {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 25px;
-            min-height: 350px;
-            white-space: pre-wrap;
-            line-height: 1.8;
-            color: #333;
-            font-size: 15px;
-            border: 2px solid #e0e0e0;
+            background:#f8f9fa; border-radius:10px; padding:25px; min-height:350px; white-space:pre-wrap; line-height:1.8;
+            color:#333; font-size:15px; border:2px solid #e0e0e0; display:block;
+            /* don't force !important here to keep code maintainable; min-height prevents collapse */
+            word-break: break-word;
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
+        .summary-controls { margin-top:12px; display:flex; gap:10px; align-items:center; }
+        .btn-clear { background:#fff3f0; color:#c03535; border:1px solid #f5c2c2; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
 
-        .status-waiting {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
+        .status-badge { display:inline-block; padding:8px 16px; border-radius:20px; font-size:13px; margin-bottom:15px; font-weight:600; }
+        .status-waiting { background:#e3f2fd; color:#1976d2; }
+        .status-processing { background:#fff3e0; color:#f57c00; }
+        .status-complete { background:#d4edda; color:#155724; }
+        .status-error { background:#f8d7da; color:#721c24; }
 
-        .status-processing {
-            background: #fff3e0;
-            color: #f57c00;
-        }
+        .report-metadata { background:#e8f4f8; border-left:4px solid #667eea; padding:15px; margin-bottom:20px; border-radius:8px; font-size:13px; color:#555; }
+        .report-history { background:#fff3cd; border-left:4px solid #ffc107; padding:12px; margin-bottom:15px; border-radius:8px; font-size:12px; color:#856404; }
+        .report-history a { color:#667eea; text-decoration:none; font-weight:600; cursor:pointer; }
 
-        .status-complete {
-            background: #d4edda;
-            color: #155724;
-        }
+        footer { text-align:center; padding:25px 20px; background: rgba(0,0,0,0.3); border-top:1px solid rgba(255,255,255,0.1); color:#b8c5d6; font-size:.85rem; margin-top:40px; }
 
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
+        @media (max-width:968px) {
+            .main-container { grid-template-columns:1fr; }
+            .nav-links { display:none; }
         }
-
-        footer {
-            text-align: center;
-            padding: 25px 20px;
-            background: rgba(0, 0, 0, 0.3);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #b8c5d6;
-            font-size: 0.85rem;
-            margin-top: 40px;
-        }
-
-        @media (max-width: 968px) {
-            .main-container {
-                grid-template-columns: 1fr;
-            }
-            .nav-links {
-                display: none;
-            }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding-top: 60px;
-            }
-        }
+        @media (max-width:768px) { body { padding-top:60px; } }
     </style>
 </head>
 <body>
@@ -359,8 +87,6 @@
                     <rect x="25" y="15" width="50" height="20" rx="6" fill="url(#grad2)" stroke="#764ba2" stroke-width="2"/>
                     <circle cx="50" cy="20" r="4" fill="#f093fb"/>
                     <path d="M45 50 L55 50 M50 45 L50 55" stroke="white" stroke-width="3" stroke-linecap="round"/>
-                    <rect x="30" y="60" width="12" height="15" rx="2" fill="#f093fb" opacity="0.8"/>
-                    <rect x="58" y="60" width="12" height="15" rx="2" fill="#667eea" opacity="0.8"/>
                     <defs>
                         <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
@@ -374,6 +100,7 @@
                 </svg>
                 MediCure AI
             </a>
+
             <ul class="nav-links">
                 <li><a href="main.html">Home</a></li>
                 <li><a href="uploadreport.html">Upload PDF</a></li>
@@ -396,12 +123,12 @@
             <div class="content">
                 <div class="upload-section">
                     <div class="upload-icon">📄</div>
-                    <h3 style="margin-bottom: 10px; color: #333;">Upload Medical Report</h3>
-                    <p style="color: #666; margin-bottom: 20px;">PDF files only</p>
+                    <h3 style="margin-bottom:10px; color:#333;">Upload Medical Report</h3>
+                    <p style="color:#666; margin-bottom:20px;">PDF files only</p>
 
                     <form id="uploadForm">
                         <div class="file-input-wrapper">
-                            <input type="file" id="pdfFile" accept="application/pdf" required />
+                            <input type="file" id="pdfFile" accept="application/pdf" />
                             <label for="pdfFile" class="file-label">Choose File</label>
                             <span class="file-name" id="fileName"></span>
                         </div>
@@ -409,10 +136,10 @@
                     </form>
                 </div>
 
-                <div class="loading" id="loading">
-                    <div class="spinner"></div>
-                    <p style="color: #667eea; font-weight: 600;">Processing your report...</p>
-                    <p style="color: #999; font-size: 13px; margin-top: 10px;">This may take a moment</p>
+                <div class="loading" id="loading" aria-hidden="true">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p style="color:#667eea; font-weight:600;">Processing your report...</p>
+                    <p style="color:#999; font-size:13px; margin-top:10px;">AI is analyzing the document</p>
                 </div>
             </div>
         </div>
@@ -424,8 +151,12 @@
             </div>
 
             <div class="summary-content">
-                <div class="status-badge status-waiting" id="statusBadge">⏳ Waiting for upload</div>
-                <div class="summary-display" id="summaryDisplay">No report has been uploaded yet.
+                <div id="statusBadge" class="status-badge status-waiting">⏳ Waiting for upload</div>
+                <div id="reportHistory" style="display:none;"></div>
+                <div id="reportMetadata" style="display:none;"></div>
+
+                <div class="summary-display" id="summaryDisplay">
+No report has been uploaded yet.
 
 Upload a medical report on the left to see the AI-powered analysis here.
 
@@ -434,89 +165,330 @@ The summary will include:
 • Test results
 • Abnormal values
 • Diagnosis information
-• Critical observations</div>
+• Critical observations
+                </div>
+
+                <div class="summary-controls" style="margin-top:12px;">
+                    <button id="clearSummaryBtn" class="btn-clear" title="Clear the visible summary">Clear Summary</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <footer>
-        <p>&copy; 2024 MediCure AI. All rights reserved.</p>
-    </footer>
+    <footer><p>&copy; 2024 MediCure AI. All rights reserved.</p></footer>
 
     <script>
+    (function(){
+        // Elements
         const fileInput = document.getElementById('pdfFile');
-        const fileName = document.getElementById('fileName');
+        const fileNameEl = document.getElementById('fileName');
         const uploadForm = document.getElementById('uploadForm');
         const uploadBtn = document.getElementById('uploadBtn');
         const loading = document.getElementById('loading');
         const statusBadge = document.getElementById('statusBadge');
         const summaryDisplay = document.getElementById('summaryDisplay');
+        const reportMetadata = document.getElementById('reportMetadata');
+        const reportHistory = document.getElementById('reportHistory');
+        const clearSummaryBtn = document.getElementById('clearSummaryBtn');
 
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                fileName.textContent = `Selected: ${e.target.files[0].name}`;
+        // State
+        let uploadHistory = []; // stores {id, fileName, summary, timestamp}
+        let isUploading = false;
+        let currentSummary = '';
+
+        // --- persistence helpers ---
+        const HISTORY_KEY = 'mediCure_upload_history_v1';
+        function loadHistoryFromSession() {
+            try {
+                const raw = sessionStorage.getItem(HISTORY_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) uploadHistory = parsed;
+                }
+            } catch (e) {
+                console.warn('Could not load history from sessionStorage', e);
+                uploadHistory = [];
+            }
+        }
+        function saveHistoryToSession() {
+            try {
+                sessionStorage.setItem(HISTORY_KEY, JSON.stringify(uploadHistory));
+            } catch (e) {
+                console.warn('Could not save history to sessionStorage', e);
+            }
+        }
+
+        // UI helpers
+        function setStatus(cls, text) {
+            statusBadge.className = 'status-badge ' + cls;
+            statusBadge.textContent = text;
+        }
+        function showLoading(on = true) {
+            if (on) {
+                loading.classList.add('active');
+                loading.setAttribute('aria-hidden', 'false');
             } else {
-                fileName.textContent = '';
+                loading.classList.remove('active');
+                loading.setAttribute('aria-hidden', 'true');
+            }
+        }
+        function safeSetSummary(text) {
+            currentSummary = String(text || '');
+            // Use textContent (no layout thrash that innerText sometimes causes)
+            summaryDisplay.textContent = currentSummary;
+        }
+
+        // Basic HTML escape for filenames
+        function escapeHtml(s) {
+            return String(s || '').replace(/[&<>"']/g, function(m) {
+                return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+            });
+        }
+
+        // Render history UI
+        function renderHistory() {
+            if (!uploadHistory || uploadHistory.length <= 1) {
+                reportHistory.style.display = 'none';
+                return;
+            }
+            const items = uploadHistory.slice(1).map(h =>
+                `<a class="history-link" data-id="${encodeURIComponent(h.id)}">${escapeHtml(h.fileName)}</a>`
+            ).join(' • ');
+            reportHistory.innerHTML = `<div class="report-history">📚 <strong>Upload History:</strong> ${items}</div>`;
+            reportHistory.style.display = 'block';
+        }
+
+        // Clear summary (user action)
+        clearSummaryBtn.addEventListener('click', () => {
+            currentSummary = '';
+            summaryDisplay.textContent = 'No report has been uploaded yet.';
+            setStatus('status-waiting', '⏳ Waiting for upload');
+            // Keep history intact
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                fileNameEl.textContent = `Selected: ${e.target.files[0].name}`;
+            } else {
+                fileNameEl.textContent = '';
             }
         });
 
+        // Upload form submit - prevents default (no page reload)
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+            if (isUploading) return;
+
             const file = fileInput.files[0];
             if (!file) {
-                alert('Please select a file first');
+                alert('Please select a PDF file first.');
                 return;
             }
 
-            statusBadge.className = 'status-badge status-processing';
-            statusBadge.textContent = '⏳ Processing...';
-            summaryDisplay.textContent = 'Analyzing your medical report...\n\nPlease wait while our AI processes the document.';
-            
-            loading.classList.add('active');
+            isUploading = true;
             uploadBtn.disabled = true;
-
-            const formData = new FormData();
-            formData.append("file", file);
+            setStatus('status-processing', '⏳ Processing...');
+            reportMetadata.style.display = 'none';
+            reportHistory.style.display = 'none';
+            showLoading(true);
 
             try {
-                const response = await fetch("http://127.0.0.1:8000/report/upload", {
-                    method: "POST",
-                    body: formData
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Fetch with timeout using AbortController
+                const controller = new AbortController();
+                const timeoutMs = 60000;
+                const tId = setTimeout(() => controller.abort(), timeoutMs);
+
+                const response = await fetch('http://127.0.0.1:8000/report/upload', {
+                    method: 'POST', body: formData, signal: controller.signal
                 });
 
+                clearTimeout(tId);
+
                 if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
+                    const body = await response.text().catch(()=> 'No response body');
+                    if (response.status === 429) {
+                        throw new Error('429 Rate limited');
+                    }
+                    throw new Error(`Server error: ${response.status} - ${body}`);
                 }
 
-                const data = await response.json();
+                const data = await response.json().catch(()=>null);
+                if (!data) throw new Error('Invalid JSON response from server');
 
-                loading.classList.remove('active');
-                
-                statusBadge.className = 'status-badge status-complete';
-                statusBadge.textContent = '✓ Analysis Complete';
-                
-                summaryDisplay.textContent = data.summary || 'No summary available';
+                if (data.success && data.summary) {
+                    const entry = {
+                        id: data.report_id ?? (Date.now().toString()),
+                        fileName: data.file_name ?? file.name,
+                        summary: data.summary,
+                        timestamp: new Date().toLocaleString()
+                    };
+                    // store at top
+                    uploadHistory.unshift(entry);
+                    // persist session
+                    saveHistoryToSession();
+                    // render history if applicable
+                    renderHistory();
 
+                    // status badge
+                    if (String(data.summary).includes('BASIC SUMMARY') || String(data.summary).toLowerCase().includes('rate limited')) {
+                        setStatus('status-processing', '⚠️ Basic Summary (Rate Limited)');
+                    } else {
+                        setStatus('status-complete', '✓ AI Analysis Complete');
+                    }
+
+                    // metadata
+                    reportMetadata.innerHTML = `
+                        <div class="report-metadata">
+                            <p><strong>📄 File:</strong> ${escapeHtml(entry.fileName)}</p>
+                            <p><strong>🆔 Report ID:</strong> ${escapeHtml(entry.id)}</p>
+                            ${data.pages_processed ? `<p><strong>📖 Pages:</strong> ${escapeHtml(String(data.pages_processed))}</p>` : ''}
+                            ${data.chunks_created ? `<p><strong>✂️ Chunks:</strong> ${escapeHtml(String(data.chunks_created))}</p>` : ''}
+                            <p><strong>🕒 Uploaded:</strong> ${escapeHtml(new Date().toLocaleString())}</p>
+                        </div>
+                    `;
+                    reportMetadata.style.display = 'block';
+
+                    // set and show summary (use textContent)
+                    safeSetSummary(data.summary);
+
+                    // reset file input UI (no full re-render)
+                    fileInput.value = '';
+                    fileNameEl.textContent = '';
+                } else {
+                    throw new Error('No summary in response');
+                }
             } catch (err) {
-                loading.classList.remove('active');
-                
-                statusBadge.className = 'status-badge status-error';
-                statusBadge.textContent = '✗ Error Occurred';
-                
-                summaryDisplay.textContent = `ERROR: ${err.message}\n\nPlease try again or check your connection.`;
+                const msg = (err && err.message) ? err.message : String(err);
+                console.error('Upload failed:', err);
+
+                // show friendly summary for common cases
+                if (msg.includes('429') || msg.toLowerCase().includes('rate limit')) {
+                    safeSetSummary(`⏳ RATE LIMIT REACHED
+
+The server reported rate limiting. Your file may be saved but AI analysis could be limited. Please try again in a minute or upgrade your plan.`);
+                    setStatus('status-processing', '⚠️ Basic Summary (Rate Limited)');
+                } else if (msg === 'The user aborted a request.') {
+                    safeSetSummary(`ERROR: Request timed out. The server did not respond in time.`);
+                    setStatus('status-error', '✗ Request Timed Out');
+                } else {
+                    safeSetSummary(`ERROR: ${msg}
+
+Possible causes:
+• Backend server is down
+• CORS / network issue
+• File failed parsing on server
+
+Check browser console for more details.`);
+                    setStatus('status-error', '✗ Error Occurred');
+                }
+
+                reportMetadata.style.display = 'none';
+                reportHistory.style.display = 'none';
             } finally {
+                showLoading(false);
                 uploadBtn.disabled = false;
+                isUploading = false;
             }
         });
 
-        function logout(event) {
-            event.preventDefault();
-            if (confirm("Are you sure you want to logout?")) {
-                localStorage.removeItem("token");
-                window.location.href = "login.html";
+        // event delegation for history links
+        reportHistory.addEventListener('click', (ev) => {
+            const target = ev.target;
+            if (target && target.classList && target.classList.contains('history-link')) {
+                ev.preventDefault();
+                const id = decodeURIComponent(target.dataset.id);
+                loadReport(id);
+            }
+        });
+
+        // Try cache first, then server
+        async function loadReport(reportId) {
+            // cached
+            const cached = uploadHistory.find(h => String(h.id) === String(reportId));
+            if (cached) {
+                safeSetSummary(cached.summary);
+                setStatus('status-complete', '✓ Loaded from History');
+                reportMetadata.innerHTML = `
+                    <div class="report-metadata">
+                        <p><strong>📄 File:</strong> ${escapeHtml(cached.fileName)}</p>
+                        <p><strong>🆔 Report ID:</strong> ${escapeHtml(cached.id)}</p>
+                        <p><strong>🕒 Loaded:</strong> ${escapeHtml(cached.timestamp)}</p>
+                    </div>
+                `;
+                reportMetadata.style.display = 'block';
+                return;
+            }
+
+            try {
+                setStatus('status-processing','⏳ Loading...');
+                showLoading(true);
+
+                const resp = await fetch(`http://127.0.0.1:8000/report/${encodeURIComponent(reportId)}`, { method:'GET' });
+                if (!resp.ok) throw new Error('Report not found on server');
+                const data = await resp.json();
+                if (data.success && data.report) {
+                    safeSetSummary(data.report.summary);
+                    setStatus('status-complete', '✓ Loaded from Database');
+                    reportMetadata.innerHTML = `
+                        <div class="report-metadata">
+                            <p><strong>📄 File:</strong> ${escapeHtml(data.report.file_name)}</p>
+                            <p><strong>🆔 Report ID:</strong> ${escapeHtml(data.report.id)}</p>
+                            <p><strong>🕒 Uploaded:</strong> ${escapeHtml(data.report.uploaded_at || 'N/A')}</p>
+                        </div>
+                    `;
+                    reportMetadata.style.display = 'block';
+                } else {
+                    throw new Error('Invalid report data');
+                }
+            } catch (err) {
+                setStatus('status-error', '✗ Load Failed');
+                safeSetSummary(`Error loading report: ${err && err.message ? err.message : String(err)}`);
+                reportMetadata.style.display = 'none';
+            } finally {
+                showLoading(false);
             }
         }
+
+        // logout helper
+        function logout(event) {
+            event.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // init
+        (function init(){
+            loadHistoryFromSession();
+            renderHistory();
+            // if there's a last result in history, show it
+            if (uploadHistory && uploadHistory.length > 0) {
+                safeSetSummary(uploadHistory[0].summary);
+                setStatus('status-complete', '✓ Loaded last result');
+                // show metadata for the latest if available
+                reportMetadata.innerHTML = `
+                    <div class="report-metadata">
+                        <p><strong>📄 File:</strong> ${escapeHtml(uploadHistory[0].fileName)}</p>
+                        <p><strong>🆔 Report ID:</strong> ${escapeHtml(uploadHistory[0].id)}</p>
+                        <p><strong>🕒 Loaded:</strong> ${escapeHtml(uploadHistory[0].timestamp)}</p>
+                    </div>
+                `;
+                reportMetadata.style.display = 'block';
+            }
+        })();
+
+        // expose logout to global scope (used in markup)
+        window.logout = logout;
+
+        // quick sanity
+        if (!summaryDisplay) console.error('❌ summaryDisplay element not found!');
+        else console.log('✅ Upload report page ready (stable summary behavior)');
+    })();
     </script>
 </body>
 </html>
