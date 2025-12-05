@@ -5,14 +5,8 @@ from sqlalchemy.orm import sessionmaker, relationship
 from dotenv import load_dotenv
 from datetime import datetime
 
-# ==============================
-# Load environment variables
-# ==============================
 load_dotenv()
 
-# ==============================
-# Database Config
-# ==============================
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./medicure.db")
 
 engine = create_engine(
@@ -22,9 +16,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# ==============================
-# Models
-# ==============================
+
 
 class User(Base):
     __tablename__ = "users"
@@ -49,7 +41,6 @@ class Doctor(Base):
     bio = Column(Text, nullable=True)
     contact = Column(String(100), nullable=True)
 
-    # ✅ Replaced 'experience' and 'max_daily_appointments' with 'available_slots'
     available_slots = Column(Integer, default=5)
 
     appointments = relationship("Appointment", back_populates="doctor")
@@ -66,8 +57,7 @@ class Appointment(Base):
 
     doctor = relationship("Doctor", back_populates="appointments")
 
-# ==============================
 # Initialize Database
-# ==============================
+
 def init_db():
     Base.metadata.create_all(bind=engine)

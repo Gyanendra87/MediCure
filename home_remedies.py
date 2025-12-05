@@ -9,9 +9,6 @@ import re
 
 warnings.filterwarnings('ignore')
 
-# ==========================
-# Google Custom Search API setup
-# ==========================
 GOOGLE_API_KEY = "AIzaSyAcs84HLFgqaFahv7gqeADpKPBvNySpEwo"
 GOOGLE_CX = "5322ad2fa4e484776"
 
@@ -19,20 +16,20 @@ def is_english(text):
     """Check if text is primarily English (basic check)"""
     if not text:
         return False
-    # Check for non-ASCII characters that indicate non-English text
+   
     non_ascii = len([c for c in text if ord(c) > 127])
-    # If more than 20% non-ASCII, likely not English
+    
     return (non_ascii / len(text)) < 0.2 if len(text) > 0 else True
 
 def clean_remedy_text(text):
     """Clean and format remedy text"""
     if not text:
         return ""
-    # Remove extra whitespace
+
     text = re.sub(r'\s+', ' ', text).strip()
-    # Remove bullet points, numbers at start
+  
     text = re.sub(r'^[\d\.\)\-•∙◦▪▫]+\s*', '', text)
-    # Ensure proper ending
+
     if text and not text.endswith(('.', '!', '?')):
         text += '.'
     return text
@@ -44,7 +41,7 @@ def split_into_points(text):
     
     points = []
     
-    # Try splitting by newlines first
+
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     if len(lines) > 1:
         for line in lines:
@@ -54,7 +51,7 @@ def split_into_points(text):
         if points:
             return points
     
-    # Try splitting by periods for long text
+ 
     if len(text) > 200:
         sentences = text.split('.')
         for sentence in sentences:
@@ -64,9 +61,9 @@ def split_into_points(text):
                 if cleaned and is_english(cleaned):
                     points.append(cleaned)
         if points:
-            return points[:10]  # Limit to 10 points
+            return points[:10] 
     
-    # If no splitting worked, return as single point if valid
+ 
     cleaned = clean_remedy_text(text)
     if cleaned and is_english(cleaned):
         return [cleaned]
@@ -83,7 +80,7 @@ def fetch_google_results(disease_name, num_results=5):
         results = []
         for item in data.get("items", []):
             snippet = item.get("snippet", "")
-            # Only include English snippets
+           
             if is_english(snippet):
                 results.append({
                     "title": item.get("title"),
@@ -103,7 +100,7 @@ def extract_remedy_from_google(google_results):
     for result in google_results[:5]:
         snippet = result.get('snippet', '').strip()
         if snippet and is_english(snippet):
-            # Split long snippets into sentences
+            
             if len(snippet) > 150:
                 sentences = snippet.replace('...', '.').split('. ')
                 for sentence in sentences:
@@ -125,9 +122,9 @@ def extract_remedy_from_google(google_results):
     else:
         return ["No specific English remedies found. Please consult a healthcare professional."]
 
-# ==========================
+
 # Load remedies dataset
-# ==========================
+
 try:
     df = pd.read_csv("remedies.csv", encoding='utf-8', quotechar='"', skipinitialspace=True)
 except Exception as e:
@@ -150,9 +147,9 @@ if "Link" not in df.columns:
 
 df = df[(df["Disease"] != "") & (df["Home Remedy"] != "")].reset_index(drop=True)
 
-# ==========================
+
 # TF-IDF vectorizer
-# ==========================
+
 vectorizer = TfidfVectorizer(
     max_features=1000,
     ngram_range=(1, 3),
@@ -163,9 +160,9 @@ vectorizer = TfidfVectorizer(
 )
 disease_vectors = vectorizer.fit_transform(df["Disease"])
 
-# ==========================
+
 # Predict single remedy
-# ==========================
+
 def predict_home_remedy(disease_name):
     disease_name_clean = disease_name.lower().strip()
     
@@ -207,7 +204,7 @@ def predict_home_remedy(disease_name):
             "Confidence": f"{confidence:.2%}"
         }
     
-    # Fallback to Google Custom Search (English only)
+   
     google_results = fetch_google_results(disease_name)
     extracted_remedies = extract_remedy_from_google(google_results)
     
@@ -223,9 +220,9 @@ def predict_home_remedy(disease_name):
         "Confidence": "N/A (External Source)"
     }
 
-# ==========================
+
 # Get top N remedies from CSV
-# ==========================
+
 def get_top_predictions(disease_name: str, top_n: int = 3):
     disease_name_clean = disease_name.lower().strip()
     query_vector = vectorizer.transform([disease_name_clean])
@@ -247,21 +244,21 @@ def get_top_predictions(disease_name: str, top_n: int = 3):
         })
     return results
 
-# ==========================
+
 # Get all unique diseases
-# ==========================
+
 def get_all_diseases():
     return sorted(df["Disease"].unique().tolist())
 
-# ==========================
+
 # Test block
-# ==========================
+
 if __name__ == "__main__":
     test_diseases = ["cold", "fever", "piles", "unknown disease xyz"]
     
     for disease in test_diseases:
         result = predict_home_remedy(disease)
-        print(f"\n{'='*60}")
+     
         print(f"🔍 Disease: {disease}")
         print(f"📊 Source: {result['Source']}")
         print(f"💊 Item: {result['Item']}")
@@ -283,5 +280,4 @@ if __name__ == "__main__":
                 print(f"  {i}. {g['title']}")
                 print(f"     {g['link']}")
     
-    print(f"\n{'='*60}")
-    print("✅ Test completed!")
+  

@@ -9,23 +9,34 @@ from sqlalchemy.orm import Session
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_google_genai import ChatGoogleGenerativeAI
+
+I
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+    print(" google-generativeai library loaded")
+except ImportError as e:
+    GENAI_AVAILABLE = False
+    print(f" google-generativeai not available: {e}")
 
 from database import SessionLocal, Report
 
 
-# ============================
-# ENV SETUP
-# ============================
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY not found in .env!")
 
-os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+if GOOGLE_API_KEY and GENAI_AVAILABLE:
+    try:
+        genai.configure(api_key=GOOGLE_API_KEY)
+        print(" Google Generative AI configured successfully")
+    except Exception as e:
+        print(f" Failed to configure Google AI: {e}")
+        GENAI_AVAILABLE = False
+elif not GOOGLE_API_KEY:
+    print(" GOOGLE_API_KEY not found in environment variables")
+    GENAI_AVAILABLE = False
 
 
-# DB Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -34,78 +45,220 @@ def get_db():
         db.close()
 
 
-# ============================
-# HELPER FUNCTIONS
-# ============================
 def generate_fallback_summary(text: str, filename: str) -> str:
-    """Generate a basic summary when AI is unavailable due to rate limits"""
-    
-    # Extract key information using simple text processing
+    """Generate a basic summary when AI is unavailable"""
     lines = text.split('\n')
-    text_lower = text.lower()
-    
-    # Try to find key sections
     findings = []
     test_results = []
-    diagnoses = []
     
-    # Look for common medical keywords
-    medical_keywords = ['diagnosis', 'findings', 'result', 'test', 'level', 'count', 'abnormal', 'normal']
-    test_keywords = ['hemoglobin', 'wbc', 'rbc', 'glucose', 'cholesterol', 'pressure', 'rate', 'mg/dl', 'mmol/l']
-    
-    for line in lines[:50]:  # Check first 50 lines
+    medical_keywords = ['diagnosis', 'findings', 'result', 'test', 'level', 'count', 'abnormal', 'normal', 'patient', 'doctor', 'hospital']
+    test_keywords = ['hemoglobin', 'wbc', 'rbc', 'glucose', 'cholesterol', 'pressure', 'rate', 'mg/dl', 'mmol/l', 'bpm', 'temperature']
+
+    for line in lines[:50]:
         line_clean = line.strip()
         if not line_clean or len(line_clean) < 10:
             continue
-            
         line_lower = line_clean.lower()
         
-        # Capture lines with medical keywords
         if any(keyword in line_lower for keyword in medical_keywords):
-            findings.append(line_clean[:100])  # Limit length
+            if line_clean not in findings and len(findings) < 5:
+                findings.append(line_clean[:120])
         
-        # Capture lines with test keywords
         if any(keyword in line_lower for keyword in test_keywords):
-            test_results.append(line_clean[:100])
-    
-    # Build fallback summary
-    summary = f"""⚠️ BASIC SUMMARY (AI Rate Limited)
+            if line_clean not in test_results and len(test_results) < 5:
+                test_results.append(line_clean[:120])
 
-📄 **File:** {filename}
-📊 **Document Length:** {len(text)} characters
+    summary = f"""# Document Summary (Basic Extraction)
 
-## ⚡ Quick Extract
-This is a basic text extraction. For full AI analysis, please try again in 1 minute.
+ **File:** {filename}  
+ **Document Length:** {len(text):,} characters  
+ **Note:** AI analysis unavailable - showing basic text extraction
 
 """
-    
+
     if findings:
-        summary += "## 🔍 Key Sections Found:\n"
-        for finding in findings[:5]:
-            summary += f"• {finding}\n"
+        summary += "##  Key Sections Detected:\n\n"
+        for i, finding in enumerate(findings, 1):
+            summary += f"{i}. {finding}\n"
         summary += "\n"
-    
+    else:
+        summary += "##  Key Sections Detected:\n\nNo specific medical keywords found.\n\n"
+
     if test_results:
-        summary += "## 🧪 Test-Related Content:\n"
-        for result in test_results[:5]:
-            summary += f"• {result}\n"
+        summary += "##  Test-Related Content:\n\n"
+        for i, result in enumerate(test_results, 1):
+            summary += f"{i}. {result}\n"
         summary += "\n"
+    else:
+        summary += "##  Test-Related Content:\n\nNo test-related content detected.\n\n"
+
+    # Show preview of document
+    preview_text = text[:1000] if len(text) > 1000 else text
+    summary += f"## 📋 Document Preview:\n\n```\n{preview_text}\n```\n\n"
     
-    # Add preview of full text
-    summary += f"## 📋 Document Preview:\n{text[:500]}...\n\n"
-    summary += "---\n"
-    summary += "💡 **Note:** This is a basic text extraction due to API rate limits.\n"
-    summary += "For AI-powered analysis with medical insights, please wait 60 seconds and upload again.\n"
-    summary += "The document has been saved to the database (ID will be shown above)."
+    if len(text) > 1000:
+        summary += f"*...and {len(text) - 1000:,} more characters*\n\n"
+    
+    summary += "---\n\n"
+    summary += " **To enable AI-powered analysis:**\n"
+    summary += "1. Get an API key from https://makersuite.google.com/app/apikey\n"
+    summary += "2. Add it to your .env file as GOOGLE_API_KEY=your_key_here\n"
+    summary += "3. Restart the application\n"
     
     return summary
 
+def generate_ai_summary(text: str, filename: str) -> tuple:
+    """
+    Generate AI summary using Google Generative AI
+    Returns: (summary_text, model_name) or (None, None) if failed
+    """
+    if not GENAI_AVAILABLE or not GOOGLE_API_KEY:
+        print("AI summary not available - missing API key or library")
+        return None, None
+    
+    # Models to try in order of preference
+    model_options = [
+        "gemini-1.5-flash",
+        "gemini-1.5-pro", 
+        "gemini-pro",
+        "gemini-1.0-pro"
+    ]
+    
+    max_retries = 2
+    
+    for model_name in model_options:
+        print(f" Trying model: {model_name}")
+        
+        for attempt in range(max_retries):
+            try:
+                # Initialize model
+                model = genai.GenerativeModel(model_name)
+                
+                # Create prompt
+                prompt = f"""You are a medical AI assistant. Analyze this medical document and provide a clear, structured summary.
 
-# ============================
-# ROUTER
-# ============================
+**IMPORTANT:** Format your response EXACTLY as shown below with these section headers:
+
+## Key Findings
+[List the main medical findings, diagnoses, or observations]
+
+## Test Results  
+[List any laboratory values, measurements, or test results]
+
+## Recommendations
+[List any medical advice, prescriptions, or follow-up instructions]
+
+## Critical Notes
+[List any abnormal values, urgent findings, or important warnings]
+
+---
+
+**Document to analyze:**
+
+{text}
+
+---
+
+Provide your structured summary now:"""
+
+                print(f"    Sending request to {model_name} (attempt {attempt + 1}/{max_retries})...")
+          
+                generation_config = {
+                    "temperature": 0.3,
+                    "top_p": 0.95,
+                    "top_k": 40,
+                    "max_output_tokens": 2048,
+                    "candidate_count": 1,
+                }
+                
+         
+                safety_settings = [
+                    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+                ]
+                
+                # Generate content
+                response = model.generate_content(
+                    prompt,
+                    generation_config=generation_config,
+                    safety_settings=safety_settings
+                )
+                
+            
+                summary_text = None
+                
+                if response and hasattr(response, 'text'):
+                    try:
+                        summary_text = response.text.strip()
+                    except Exception as text_error:
+                        print(f"   ⚠️ Could not access .text property: {text_error}")
+                
+                
+                if not summary_text and hasattr(response, 'candidates'):
+                    try:
+                        if response.candidates and len(response.candidates) > 0:
+                            candidate = response.candidates[0]
+                            if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                                parts_text = ''.join([
+                                    part.text for part in candidate.content.parts 
+                                    if hasattr(part, 'text')
+                                ])
+                                if parts_text:
+                                    summary_text = parts_text.strip()
+                    except Exception as candidate_error:
+                        print(f"    Could not extract from candidates: {candidate_error}")
+                
+               
+                if summary_text and len(summary_text) > 100:
+                    print(f"Successfully generated summary with {model_name}")
+                    print(f"   Summary length: {len(summary_text):,} characters")
+                    return summary_text, model_name
+                else:
+                    print(f" Response too short or empty: {len(summary_text) if summary_text else 0} chars")
+                
+            except Exception as api_error:
+                err_msg = str(api_error).lower()
+                print(f" Error with {model_name} (attempt {attempt + 1}/{max_retries}):")
+                print(f"   Error: {str(api_error)[:250]}")
+                
+                # Handle specific error types
+                if any(x in err_msg for x in ["404", "not found", "does not exist", "not supported"]):
+                    print(f" Model {model_name} not available, trying next model...")
+                    break  
+                    
+                elif any(x in err_msg for x in ["429", "rate", "quota", "resource_exhausted", "resource exhausted"]):
+                    if attempt < max_retries - 1:
+                        wait_time = 3 * (2 ** attempt)  
+                        print(f" Rate limit hit. Waiting {wait_time}s before retry...")
+                        time.sleep(wait_time)
+                        continue
+                        print(f" Rate limit exceeded for {model_name}, trying next model...")
+                        break  
+                        
+                elif any(x in err_msg for x in ["api key", "invalid", "authentication", "permission denied", "permission_denied"]):
+                    print(f" API authentication failed!")
+                    print(f"   Please check your API key at: https://makersuite.google.com/app/apikey")
+                    return None, None  
+                    
+                elif any(x in err_msg for x in ["blocked", "safety"]):
+                    print(f" Content blocked by safety filters, trying next model...")
+                    break  
+                else:
+                  
+                    if attempt < max_retries - 1:
+                        print(f"⏳ Retrying in 2 seconds...")
+                        time.sleep(2)
+                        continue 
+                        print(f" All retries exhausted for {model_name}, trying next model...")
+                        break 
+    
+    print("All AI models failed or unavailable")
+    return None, None
+
+
 uploadreport_router = APIRouter(prefix="/report", tags=["Report"])
-
 
 @uploadreport_router.post("/upload")
 async def upload_medical_report(
@@ -116,242 +269,159 @@ async def upload_medical_report(
     tmp_path = None
 
     try:
-        # ============================================
-        # STEP 1: VALIDATE FILE
-        # ============================================
-        print("=" * 50)
-        print("🚀 STARTING PDF PROCESSING")
-        print(f"📄 File: {file.filename}")
-        print(f"📄 Content-Type: {file.content_type}")
-        
+       
+        print(" PDF PROCESSING STARTED")
+      
+        print(f"File: {file.filename}")
+
+        # Validate file
         if not file or not file.filename:
             raise HTTPException(status_code=400, detail="No file provided")
         
         if not file.filename.lower().endswith(".pdf"):
-            raise HTTPException(status_code=400, detail="Only PDF files allowed")
+            raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
-        # ============================================
-        # STEP 2: SAVE FILE TEMPORARILY
-        # ============================================
-        print("💾 Saving file to temp location...")
+      
+        print(" Saving file...")
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             content = await file.read()
-            print(f"📦 File size: {len(content)} bytes")
-            
             if len(content) == 0:
                 raise HTTPException(status_code=400, detail="File is empty")
-            
             tmp.write(content)
             tmp_path = tmp.name
-
-        print(f"✅ Saved to: {tmp_path}")
-
-        # ============================================
-        # STEP 3: LOAD PDF
-        # ============================================
-        print("📖 Loading PDF with PyPDFLoader...")
-        loader = PyPDFLoader(tmp_path)
-        documents = loader.load()
-
-        if not documents:
-            raise HTTPException(status_code=400, detail="PDF is empty or unreadable")
-
-        print(f"✅ Loaded {len(documents)} pages")
         
-        # Debug: show first 200 chars of first page
-        if documents:
-            preview = documents[0].page_content[:200]
-            print(f"📄 First page preview: {preview}...")
+        print(f"   Temp path: {tmp_path}")
+        print(f"   File size: {len(content):,} bytes")
 
-        # ============================================
-        # STEP 4: SPLIT TEXT
-        # ============================================
-        print("✂️  Splitting text into chunks...")
+        # Load PDF
+        print(" Loading PDF pages...")
+        try:
+            loader = PyPDFLoader(tmp_path)
+            documents = loader.load()
+        except Exception as load_error:
+            print(f" PDF loading failed: {load_error}")
+            raise HTTPException(status_code=400, detail=f"Failed to load PDF: {str(load_error)}")
+        
+        if not documents:
+            raise HTTPException(status_code=400, detail="PDF appears to be empty or corrupted")
+        
+        print(f"Loaded {len(documents)} page(s)")
+
+        
+        print(" Splitting text into chunks...")
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=2000, 
-            chunk_overlap=200
+            chunk_overlap=200,
+            length_function=len
         )
         chunks = splitter.split_documents(documents)
-
+        
         if not chunks:
-            raise HTTPException(status_code=400, detail="No text found in PDF")
-
-        print(f"✅ Created {len(chunks)} chunks")
-
-        # ============================================
-        # STEP 5: PREPARE TEXT FOR AI
-        # ============================================
-        # Take first 10 chunks (about 20,000 chars max)
-        full_text = "\n".join(chunk.page_content for chunk in chunks[:10])
+            raise HTTPException(status_code=400, detail="No text content found in PDF")
         
-        # Limit to 8000 chars to stay within API limits
-        full_text = full_text[:8000]
+        print(f" Created {len(chunks)} chunk(s)")
         
-        print(f"📝 Text prepared: {len(full_text)} characters")
-        print(f"📝 Preview: {full_text[:300]}...")
-
-        # ============================================
-        # STEP 6: CALL GEMINI AI (with fallback)
-        # ============================================
-        print("🤖 Initializing Gemini AI...")
+        full_text = "\n\n".join(chunk.page_content for chunk in chunks[:10])
+        if len(full_text) > 10000:
+            full_text = full_text[:10000]
+            print(f"📝 Text truncated to 10,000 characters for analysis")
         
-        # Use stable model with better rate limits
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",  # Stable model with generous free tier
-            temperature=0.3,
-            max_output_tokens=2048
-        )
+        print(f"📝 Prepared text: {len(full_text):,} characters")
 
-        prompt = f"""You are a medical expert AI assistant analyzing a medical report.
-
-**Task:** Provide a clear, structured summary of the medical report below.
-
-**Format your response as:**
-
-## Key Findings
-• [Important medical findings]
-
-## Test Results
-• [Laboratory values and results]
-
-## Diagnosis
-• [Any diagnoses mentioned]
-
-## Critical Notes
-• [Abnormal values or urgent findings]
-
-**Medical Report Text:**
-{full_text}
-
-**Provide the summary now:**"""
-
-        print("🤖 Sending request to Gemini API...")
         
-        # Retry logic for rate limits with fallback
-        max_retries = 2  # Reduced to 2 to fail faster
-        retry_delay = 3
+        
         final_summary = None
+        model_used = "fallback"
         
-        for attempt in range(max_retries):
-            try:
-                result = llm.invoke(prompt)
-                print("✅ Received response from Gemini!")
-                
-                # Extract summary
-                if hasattr(result, 'content'):
-                    if isinstance(result.content, str):
-                        final_summary = result.content
-                    elif isinstance(result.content, list):
-                        final_summary = "".join([
-                            item.get("text", "") if isinstance(item, dict) else str(item)
-                            for item in result.content
-                        ])
-                    else:
-                        final_summary = str(result.content)
-                else:
-                    final_summary = str(result)
-                
-                final_summary = final_summary.strip()
-                break  # Success! Exit retry loop
-                
-            except Exception as api_error:
-                error_msg = str(api_error)
-                
-                # Check if it's a rate limit error
-                if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
-                    if attempt < max_retries - 1:
-                        wait_time = retry_delay * (attempt + 1)
-                        print(f"⏳ Rate limit hit. Waiting {wait_time}s before retry {attempt + 2}/{max_retries}...")
-                        time.sleep(wait_time)
-                        continue
-                    else:
-                        # All retries failed - use fallback summary
-                        print("⚠️ All retries exhausted. Generating fallback summary...")
-                        final_summary = generate_fallback_summary(full_text, file.filename)
-                        break
-                else:
-                    # Other API error
-                    print(f"❌ API Error: {error_msg}")
-                    raise api_error
         
-        # If somehow we still don't have a summary
+        if GENAI_AVAILABLE and GOOGLE_API_KEY:
+            ai_summary, model_name = generate_ai_summary(full_text, file.filename)
+            if ai_summary:
+                final_summary = ai_summary
+                model_used = model_name
+                print(f"AI summary generated successfully")
+            else:
+                print("AI summary failed, using fallback...")
+        else:
+            print(" AI not available, using fallback summary...")
+        
         if not final_summary:
             final_summary = generate_fallback_summary(full_text, file.filename)
-        
-        print(f"✅ Summary generated: {len(final_summary)} characters")
-        print(f"📋 Summary preview: {final_summary[:200]}...")
-        
-        if not final_summary or len(final_summary) < 20:
-            # Fallback if summary is too short
-            final_summary = generate_fallback_summary(full_text, file.filename)
+            model_used = "fallback"
+            print(f" Fallback summary generated")
 
-        # ============================================
-        # STEP 7: SAVE TO DATABASE
-        # ============================================
-        print("💾 Saving to database...")
+    
+        print("\nSaving to database...")
+        try:
+            report_entry = Report(
+                file_name=file.filename, 
+                pdf_text=final_summary
+            )
+            db.add(report_entry)
+            db.commit()
+            db.refresh(report_entry)
+            print(f"Saved with ID: {report_entry.id}")
+        except Exception as db_error:
+            db.rollback()
+            print(f" Database error: {db_error}")
+            raise HTTPException(status_code=500, detail=f"Database error: {str(db_error)}")
         
-        report_entry = Report(
-            file_name=file.filename,
-            pdf_text=final_summary
-        )
-        db.add(report_entry)
-        db.commit()
-        db.refresh(report_entry)
+        print("=" * 70)
+        print("PROCESSING COMPLETE")
+        print("=" * 70 + "\n")
 
-        print(f"✅ Saved to DB with ID: {report_entry.id}")
-        print("=" * 50)
-
-        # ============================================
-        # STEP 8: RETURN RESPONSE
-        # ============================================
         return JSONResponse(
             status_code=200,
             content={
                 "success": True,
-                "message": "PDF processed and summarized successfully",
+                "message": "PDF processed successfully",
                 "file_name": file.filename,
                 "report_id": report_entry.id,
                 "summary": final_summary,
                 "pages_processed": len(documents),
-                "chunks_created": len(chunks)
+                "chunks_created": len(chunks),
+                "ai_model_used": model_used,
+                "text_length": len(full_text)
             }
         )
 
-    except HTTPException as he:
-        print(f"❌ HTTP Exception: {he.detail}")
-        raise he
-        
+    except HTTPException:
+        raise
+
     except Exception as e:
-        error_msg = str(e)
-        error_trace = traceback.format_exc()
-        
-        print(f"❌ CRITICAL ERROR: {error_msg}")
-        print(f"❌ Traceback:\n{error_trace}")
+        print(f"\nCRITICAL ERROR:")
+        print(f"   Type: {type(e).__name__}")
+        print(f"   Message: {str(e)}")
+        traceback.print_exc()
         
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail={
-                "error": "Processing failed",
-                "message": error_msg,
-                "type": type(e).__name__
+                "success": False,
+                "error": str(e),
+                "type": type(e).__name__,
+                "message": "Failed to process PDF. Please check the file and try again."
             }
         )
 
     finally:
-        # Cleanup temp file
+   
         if tmp_path and os.path.exists(tmp_path):
             try:
                 os.remove(tmp_path)
-                print(f"🗑️  Cleaned up temp file: {tmp_path}")
-            except Exception as e:
-                print(f"⚠️  Could not remove temp file: {e}")
+                print(f"🗑️ Cleaned up temp file: {tmp_path}")
+            except Exception as cleanup_error:
+                print(f"⚠️ Could not remove temp file: {cleanup_error}")
 
+
+# LIST REPORTS
 
 @uploadreport_router.get("/list")
 async def list_reports(db: Session = Depends(get_db)):
-    """Get all uploaded reports"""
+    """Get list of all uploaded reports"""
     try:
-        reports = db.query(Report).all()
+        reports = db.query(Report).order_by(Report.id.desc()).all()
+        
         return {
             "success": True,
             "count": len(reports),
@@ -359,22 +429,31 @@ async def list_reports(db: Session = Depends(get_db)):
                 {
                     "id": r.id,
                     "file_name": r.file_name,
-                    "uploaded_at": r.uploaded_at.isoformat() if hasattr(r, 'uploaded_at') else None
-                }
+                    "uploaded_at": r.uploaded_at.isoformat() if hasattr(r, 'uploaded_at') and r.uploaded_at else None,
+                    "summary_preview": (r.pdf_text[:200] + "...") if r.pdf_text and len(r.pdf_text) > 200 else r.pdf_text
+                } 
                 for r in reports
             ]
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error listing reports: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to list reports: {str(e)}")
 
+
+# GET REPORT BY ID
 
 @uploadreport_router.get("/{report_id}")
 async def get_report(report_id: int, db: Session = Depends(get_db)):
-    """Get a specific report summary by ID"""
+    """Get a specific report by ID"""
     try:
         report = db.query(Report).filter(Report.id == report_id).first()
+        
         if not report:
-            raise HTTPException(status_code=404, detail="Report not found")
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Report with ID {report_id} not found"
+            )
         
         return {
             "success": True,
@@ -382,10 +461,42 @@ async def get_report(report_id: int, db: Session = Depends(get_db)):
                 "id": report.id,
                 "file_name": report.file_name,
                 "summary": report.pdf_text,
-                "uploaded_at": report.uploaded_at.isoformat() if hasattr(report, 'uploaded_at') else None
+                "uploaded_at": report.uploaded_at.isoformat() if hasattr(report, 'uploaded_at') and report.uploaded_at else None
             }
         }
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error retrieving report {report_id}: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve report: {str(e)}")
+
+
+@uploadreport_router.delete("/{report_id}")
+async def delete_report(report_id: int, db: Session = Depends(get_db)):
+    """Delete a report by ID"""
+    try:
+        report = db.query(Report).filter(Report.id == report_id).first()
+        
+        if not report:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Report with ID {report_id} not found"
+            )
+        
+        db.delete(report)
+        db.commit()
+        
+        print(f"Deleted report {report_id}")
+        
+        return {
+            "success": True,
+            "message": f"Report {report_id} ({report.file_name}) deleted successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting report {report_id}: {e}")
+        db.rollback()
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to delete report: {str(e)}")
