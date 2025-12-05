@@ -79,7 +79,7 @@ Installation Steps
 
 Clone the repository
 
-git clone https://github.com/yourusername/medicure.git
+git clone https://github.com/Gyanendra87/MediCure.git
 cd medicure
 
 Install backend dependencies
@@ -179,10 +179,10 @@ It does not replace professional medical advice, diagnosis, or treatment. Always
 
 📧 Contact
 
-Email: support@medicure.com
+Email:gyanendrasingh7393@gmail.com
 
 GitHub Issues: For bug reports & feature requests
 
-Website: https://medicure.com
+Website:https://medicure-frontend-jej9.vercel.app/
 
-Made with ❤️ to make healthcare accessible to everyone
+
